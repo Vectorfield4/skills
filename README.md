@@ -1,8 +1,9 @@
 # skills
 
-Centralized skills and agent definitions for OpenCode. Each project mounts the
-categories it needs as `./.opencode/skills/<category>` and `./.opencode/agent/<category>`,
-so a skill added here is available everywhere it is mounted.
+Centralized skills and agent definitions for OpenCode. OpenCode loads them from
+`~/.config/opencode`, where `skills` and `agent` are symlinks to this repo, so
+every project sees the same set. A project must not keep its own `.opencode`
+copy.
 
 ## Layout
 
@@ -21,21 +22,21 @@ test/           vitest tests for that shared code
 
 ## Scripts inside skills
 
-Skills are reached as `.opencode/skills/<category>/<skill>`, so a script is invoked by
-its project-relative path from the project root:
+Skills are reached as `~/.config/opencode/skills/<category>/<skill>`, so run a
+script by its path in the global mount:
 
 ```bash
-node .opencode/skills/data/news-fetcher/scripts/fetch-candidates.mjs --sources scripts/sources.json
+node ~/.config/opencode/skills/data/news-fetcher/scripts/fetch-candidates.mjs --sources scripts/sources.json
 ```
 
 Two things that bite:
 
 1. **A bare `scripts/foo.mjs` on the command line is not the skill's script.** The shell
    resolves it against the working directory. Always spell out
-   `.opencode/skills/<category>/<skill>/scripts/...`. Inside `SKILL.md` the opposite is
+   `~/.config/opencode/skills/<category>/<skill>/scripts/...`. Inside `SKILL.md` the opposite is
    true: paths written there are relative to the skill directory, and OpenCode hands the
    agent that base directory — so never hardcode `~/.config/opencode/...` in a skill.
-2. **Entry points must survive symlinks.** Category directories are symlinks, so the CLI
+2. **Entry points must survive symlinks.** The `skills` and `agent` mounts are symlinks, so the CLI
    sees the real path in `import.meta.url` while `process.argv[1]` keeps the path the user
    typed. Detect yourself with `isEntryPoint(import.meta.url)` from `lib/cli.mjs`, never by
    comparing `import.meta.url` to `pathToFileURL(process.argv[1])`.
@@ -51,7 +52,7 @@ Scripts import shared code through the `#lib/*` alias declared in `package.json`
 `import { fetchText } from "#lib/http.mjs";` and
 `import { noulFinding } from "#lib/jev/findings.mjs";`. Node resolves the alias
 from the nearest `package.json` above the file's real path, so it works no matter
-how deep the skill sits or which project mounts it.
+how deep the skill sits or which project runs it.
 
 Skills that ship scripts: `article-extractor`, `news-fetcher`,
 `generate-image-cover`, `project-init`, `write-article`, `write-service`,
@@ -62,6 +63,8 @@ Skills that ship scripts: `article-extractor`, `news-fetcher`,
 ```bash
 npm install     # jsdom, @mozilla/readability, vitest
 npm test        # test/*.test.mjs
+npm run doctor  # check the global mounts
+npm run doctor -- <project>  # also check that project for a local .opencode
 ```
 
 The Jev engine and the prose rubrics are part of this repo (`lib/jev`,
