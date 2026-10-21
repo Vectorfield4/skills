@@ -22,8 +22,8 @@ test/           vitest tests for that shared code
 
 ## Scripts inside skills
 
-Skills are reached as `~/.config/opencode/skills/<category>/<skill>`, so run a
-script by its path in the global mount:
+Skills live under `~/.config/opencode/skills/<category>/<skill>`. Run a script by
+its path in the global mount:
 
 ```bash
 node ~/.config/opencode/skills/data/news-fetcher/scripts/fetch-candidates.mjs --sources scripts/sources.json
