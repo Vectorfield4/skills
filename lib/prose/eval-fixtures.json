@@ -1,0 +1,98 @@
+[
+  {
+    "id": "ru-antithesis",
+    "lang": "ru",
+    "text": "Это не чат-бот, а агент.",
+    "expect": "negative_connotation"
+  },
+  {
+    "id": "ru-not-just",
+    "lang": "ru",
+    "text": "Не просто отвечает, а действует.",
+    "expect": "negative_connotation"
+  },
+  {
+    "id": "ru-doomsaying",
+    "lang": "ru",
+    "text": "Если не внедрите решение, компания потеряет рынок.",
+    "expect": "negative_connotation"
+  },
+  {
+    "id": "ru-grounded",
+    "lang": "ru",
+    "text": "Маршрутизатор держит 8 000 запросов в секунду на четырёх vCPU.",
+    "expect": "none"
+  },
+  {
+    "id": "ru-empty-transition",
+    "lang": "ru",
+    "text": "Важно отметить, что это мощный и гибкий инструмент.",
+    "expect": "synthetic_depth"
+  },
+  {
+    "id": "ru-spatial-bridge",
+    "lang": "ru",
+    "text": "Ниже приведена матрица решений.",
+    "expect": "synthetic_depth"
+  },
+  {
+    "id": "ru-cognate",
+    "lang": "ru",
+    "text": "Конвейер стоит столько, сколько стоят его этапы.",
+    "expect": "tautology"
+  },
+  {
+    "id": "ru-gloss",
+    "lang": "ru",
+    "text": "Это интеграция корпоративного уровня с бесшовным подключением.",
+    "expect": "fake_depth"
+  },
+  {
+    "id": "ru-puffery-list",
+    "lang": "ru",
+    "text": "Подход обещает масштабируемость, гибкость и надёжность.",
+    "expect": "synthetic_depth"
+  },
+  {
+    "id": "ru-real-clean",
+    "lang": "ru",
+    "text": "System One-модели делят агента на два контура. Простые операции уходят в быстрые вероятностные примитивы, посчитанные на одном forward pass, а медленное рассуждение остаётся там, где нужно семантическое.",
+    "expect": "none"
+  },
+  {
+    "id": "en-not-just",
+    "lang": "en",
+    "text": "It is not just a chatbot, but a full agent that unlocks the next level.",
+    "expect": "negative_connotation"
+  },
+  {
+    "id": "en-grounded",
+    "lang": "en",
+    "text": "In roughly 90% of calls the generation is unnecessary, and we pay for it in full.",
+    "expect": "none"
+  },
+  {
+    "id": "en-gloss",
+    "lang": "en",
+    "text": "A seamless, enterprise-grade integration that scales infinitely.",
+    "expect": "fake_depth"
+  },
+  {
+    "id": "en-clean-mechanism",
+    "lang": "en",
+    "text": "The model predicts tokens one at a time, paying for every prediction.",
+    "expect": "none"
+  },
+  {
+    "id": "en-empty-transition",
+    "lang": "en",
+    "text": "It is important to note that this is a powerful and flexible tool.",
+    "expect": "synthetic_depth"
+  },
+  {
+    "id": "en-cognate",
+    "lang": "en",
+    "text": "The pipeline costs exactly as much as its stages cost.",
+    "expect": "tautology"
+  }
+]

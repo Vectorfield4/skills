@@ -1,0 +1,16 @@
+{
+  "task_id": "<task_id>",
+  "project": "<project>",
+  "type": "task",
+  "cwd": "/workspace/<project>-<task_id>",
+  "branch": "feature/<task_id>-<sanitized_title>",
+  "description": "<task description>",
+  "acceptance_criteria": [
+    "<verifiable gate the reviewer can run: lint/test/build per AGENTS.md Commands>"
+  ],
+  "metadata": {
+    "complex": false,
+    "file_inventory": ["<path1>", "<path2>"],
+    "assets": []
+  }
+}

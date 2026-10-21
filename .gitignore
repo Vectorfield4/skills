@@ -1,0 +1,6 @@
+node_modules/
+.cache/
+
+# Local junctions into the content project — never commit their contents.
+docs/
+scripts/

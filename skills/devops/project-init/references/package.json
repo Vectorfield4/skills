@@ -1,0 +1,55 @@
+{
+  "name": "<project_name>",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "tsc -b && astro build",
+    "preview": "astro preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "dependencies": {
+    "@radix-ui/react-dialog": "*",
+    "@react-three/drei": "*",
+    "@react-three/fiber": "*",
+    "@stylexjs/stylex": "*",
+    "gsap": "*",
+    "lucide-react": "*",
+    "react": "*",
+    "react-dom": "*",
+    "sharp": "*",
+    "three": "*"
+  },
+  "devDependencies": {
+    "@astrojs/react": "*",
+    "@astrojs/sitemap": "*",
+    "@biomejs/biome": "*",
+    "@storybook/react": "*",
+    "@storybook/react-vite": "*",
+    "@stylexjs/unplugin": "*",
+    "@testing-library/jest-dom": "*",
+    "@testing-library/react": "*",
+    "@testing-library/user-event": "*",
+    "@types/react": "*",
+    "@types/react-dom": "*",
+    "@vitejs/plugin-react": "*",
+    "astro": "*",
+    "jsdom": "*",
+    "storybook": "*",
+    "typescript": "*",
+    "vite": "*",
+    "vitest": "*"
+  },
+  "allowScripts": {
+    "esbuild": true
+  }
+}
