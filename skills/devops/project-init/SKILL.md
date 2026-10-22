@@ -23,7 +23,7 @@ Create `/workspace/<project>/AGENTS.md` listing:
 ### 3. Scaffold
 Run `python /etc/pi-skel/skills/project-init/scripts/scaffold.py /workspace/<project> <project>`.
 (Use `python`, not `python3` — `python3` is a Store shim on Windows and exits 9009. If the skeleton path is unavailable, invoke the script from the skill's base directory.)
-It creates the FSD dirs (.gitkeep on empty layers) and `package.json` (name substituted).
+It creates the FSD dirs (.gitkeep on empty layers), `package.json` (name substituted), and installs the version hook (`scripts/version.mjs` + `.husky/pre-commit`) via the shared installer.
 Then create the skeleton files the agent writes:
 - `astro.config.ts` — `site`, `trailingSlash: "never"`, integrations `react()` + `sitemap()`; `vite.plugins` Stylex-unplugin (`useCSSLayers: true`, aliases `@/*`), `vite.resolve.alias` `@` → `src/`; `i18n` with `defaultLocale` and `prefixDefaultLocale: false`
 - `tsconfig.json` (references) + `tsconfig.app.json` + `tsconfig.node.json`

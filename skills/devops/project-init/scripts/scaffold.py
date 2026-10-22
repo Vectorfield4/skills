@@ -42,6 +42,12 @@ for rel in GITKEEP_DIRS + PLAIN_DIRS:
 pkg = (SCRIPT_DIR.parent / "references/package.json").read_text()
 (TARGET / "package.json").write_text(pkg.replace("<project_name>", NAME))
 
+# Version hook (scripts/version.mjs + .husky/pre-commit) from the shared installer.
+import subprocess
+installer = SCRIPT_DIR.parents[1] / "setup-ci" / "scripts" / "install-version-hook.mjs"
+if installer.exists():
+    subprocess.run(["node", str(installer), str(TARGET)], check=False)
+
 # .gitignore
 gitignore = """node_modules/
 dist/
