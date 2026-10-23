@@ -23,6 +23,8 @@ JSON:
 ]
 ```
 
+Sources may also carry optional `lang`, `country`, `weight` fields, which are copied onto each candidate.
+
 `type` is one of:
 
 | type | expected body |
@@ -43,11 +45,14 @@ node .opencode/skills/data/news-fetcher/scripts/fetch-candidates.mjs \
 ```
 
 - `--sources <file.json>` — required.
+- `--topic <topic>` — optional; filter candidates by topic keywords.
+- `--lang <lang>` — optional; filter by candidate `lang`.
+- `--country <country>` — optional; filter by candidate `country`.
 - `--out <file.json>` — optional; without it the JSON goes to stdout.
 
 ## Output
 
-`[{ source, title, url, date }]` with:
+`[{ source, title, url, date, lang, country, weight }]` with:
 
 - URLs canonicalized — `https`, no hash, no `utm_*` / `fbclid` / `gclid` / `ref` / `source`,
   no trailing slash;

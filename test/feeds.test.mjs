@@ -82,7 +82,7 @@ describe("dedup", () => {
 describe("normalizeSources", () => {
   it("accepts a bare array and defaults the type to rss", () => {
     expect(normalizeSources([{ name: "a", url: "https://e.com/feed" }])).toEqual([
-      { name: "a", url: "https://e.com/feed", type: "rss" },
+      { name: "a", url: "https://e.com/feed", type: "rss", lang: null, country: null, weight: 1.0 },
     ]);
   });
   it("accepts a { sources } wrapper", () => {
