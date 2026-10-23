@@ -80,8 +80,13 @@ version: the workflow reads the file.
 
 A plan is a working document, not an archive. It appears while the work runs and
 is meant to disappear once every item is checked, so the release deleting it is
-normal and needs no extra permission. The plan lists them first, so the deletion
-shows up in the `--plan` output and in the release commit.
+normal and needs no extra permission. The plan lists them, so the deletion is
+never silent.
+
+`docs/plans/` may be tracked or gitignored. When it is tracked, the deletion
+rides in the release commit. When it is ignored, the files still go from disk
+and the commit has nothing to record, which is fine: the plan already showed the
+list before `--apply`.
 
 Finished means at least one `- [x]` and no open `- [ ]`. `lib/plans.mjs` is the
 single predicate, shared with the `rollup` skill. A plan with an open box, or a
@@ -114,8 +119,8 @@ and so on).
 
 `scripts/version.mjs` in the project is a copy of `lib/templates/version.mjs`: a
 husky hook runs without this repository mounted, so it cannot import `#lib/*`.
-That copy is the one deliberate duplicate in the setup, and the `doctor` skill
-fails when it drifts. Reinstall it from the template instead of editing it.
+That copy is the one deliberate duplicate in the setup. Reinstall it from the
+template instead of editing it.
 
 ## Acceptance criteria
 
@@ -131,7 +136,7 @@ fails when it drifts. Reinstall it from the template instead of editing it.
 - `tag vX.Y.Z already exists`: pick the next number, or delete the stale tag.
 - Pre-commit hook did not run: husky is not installed. Run `npm install`, which
   runs `prepare: husky`.
-- Doctor reports a drifted `scripts/version.mjs`: reinstall it from the template,
-  do not patch the project copy.
-- Doctor reports a leftover `scripts/release.mjs`: the project is still on the
-  pre-lib layout. Use this skill's script and delete the copy.
+- `scripts/version.mjs` drifted from `lib/templates/version.mjs`: reinstall it
+  from the template, do not patch the project copy.
+- A leftover `scripts/release.mjs` means the project still uses the pre-lib
+  layout. Use this skill's script and delete the copy.
