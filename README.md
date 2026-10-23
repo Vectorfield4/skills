@@ -10,9 +10,12 @@ copy.
 ```
 agent/          subagent definitions (prose-critic, art-agent, ...)
 skills/         SKILL.md + optional scripts/ per skill, grouped by domain
-lib/            shared engine: http/cli helpers, jev/ (gates), prose/ (rubrics)
+lib/            shared engine: http, cli, env, article-search and wp helpers, jev/ (gates), prose/ (rubrics)
 test/           vitest tests for that shared code
 ```
+
+Entry points live inside their skill, at `skills/<domain>/<skill>/scripts/`. The
+repo keeps no `bin/`.
 
 `docs/` and `scripts/` are junctions into the content project (its `docs` and
 `scripts` directories): the cover pipeline imports
@@ -55,17 +58,26 @@ from the nearest `package.json` above the file's real path, so it works no matte
 how deep the skill sits or which project runs it.
 
 Skills that ship scripts: `article-extractor`, `news-fetcher`,
-`generate-image-cover`, `project-init`, `write-article`, `write-service`,
-`write-solution`, `code-quality`.
+`thematic-article-search`, `wp-publish`, `generate-image-cover`,
+`project-init`, `write-article`, `write-service`, `write-solution`,
+`code-quality`, `doctor`, `release`.
 
 ## Setup
 
 ```bash
 npm install     # jsdom, @mozilla/readability, vitest
 npm test        # test/*.test.mjs
-npm run doctor  # check the global mounts
-npm run doctor -- <project>  # also check that project for a local .opencode
 ```
+
+Health check of the mounts runs as a skill, not as an npm script:
+
+```bash
+node skills/devops/doctor/scripts/doctor.mjs
+node skills/devops/doctor/scripts/doctor.mjs <project>
+```
+
+The doctor reads only. Given a project it fails on any `.opencode` directory,
+tracked, gitignored or empty.
 
 The Jev engine and the prose rubrics are part of this repo (`lib/jev`,
 `lib/prose`) and skill scripts reach them through `#lib/*`, so nothing needs
