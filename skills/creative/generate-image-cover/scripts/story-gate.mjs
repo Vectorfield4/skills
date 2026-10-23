@@ -10,12 +10,16 @@
 // --advisory), so the cover procedure can re-author before paying Runware;
 // without RUNWARE_API_KEY it prints a skip notice and exits 0.
 
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+
+import { getEntry } from "#lib/generation-queue.mjs";
 import { askDecisions, hasKey } from "#lib/jev/client.mjs";
 import { noulFinding } from "#lib/jev/findings.mjs";
 import { noulQuestion } from "#lib/jev/questions.mjs";
 import { formatFindings, makeReport } from "#lib/jev/report.mjs";
-import { compositionKeyFor } from "../../../../docs/image-prompts/composition.mjs";
-import { getEntry } from "../../../../scripts/generation-queue.mjs";
+import { projectRoot } from "#lib/project.mjs";
 
 const args = process.argv.slice(2);
 const [kind, slug] = args.filter((arg) => !arg.startsWith("--"));
@@ -26,11 +30,25 @@ if (!kind || !slug) {
   process.exit(2);
 }
 
-const entry = getEntry(kind, slug);
+const root = projectRoot();
+
+/** The project's deterministic composition key, when the project ships one. */
+async function compositionKeyFor(entrySlug) {
+  const file = join(root, "docs/image-prompts/composition.mjs");
+  if (!existsSync(file)) return undefined;
+  const module = await import(pathToFileURL(file).href);
+  return module.compositionKeyFor(entrySlug);
+}
+
+const entry = getEntry(kind, slug, { root });
 const config = entry?.visual_config;
-const scene = config
-  ? `composition: ${config.composition ?? compositionKeyFor(slug)}; focal: ${config.focal_element}; glow: ${config.environment_glow}; displays: ${config.display_elements.join("; ")}`
-  : entry?.story;
+let scene;
+if (config) {
+  const composition = config.composition ?? (await compositionKeyFor(slug));
+  scene = `composition: ${composition}; focal: ${config.focal_element}; glow: ${config.environment_glow}; displays: ${config.display_elements.join("; ")}`;
+} else {
+  scene = entry?.story;
+}
 if (!scene) {
   console.log(
     `story-gate: нет visual_config/story для ${kind}:${slug} в content/generation-queue.json.`,

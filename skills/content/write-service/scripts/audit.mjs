@@ -9,7 +9,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { getEntry } from "../../../../scripts/generation-queue.mjs";
+import { getEntry } from "#lib/generation-queue.mjs";
 
 const ROOT = process.cwd();
 const SVC_FIXTURES = path.join(ROOT, "src/entities/service/model/fixtures");
@@ -84,7 +84,7 @@ function targetPublished(ref) {
   return { ok: true, why: "" };
 }
 
-const pending = (slug) => Boolean(getEntry("service", slug));
+const pending = (slug) => Boolean(getEntry("service", slug, { root: ROOT }));
 
 // Richness floors — mirror of test/services/service-richness.test.ts (source of truth).
 // `diagram-resolves` lives only in the test; here diagrams are counted, not resolved.

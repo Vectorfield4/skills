@@ -136,14 +136,14 @@ No legible text, logos, brand names, arrows or numbers; the glass levitates.
 Store it:
 
 ```
-node scripts/generation-queue.mjs set-visual-config <kind> <slug> '<json>'
+node "$env:USERPROFILE\.config\opencode\skills\creative\generate-image-cover\scripts\queue.mjs" set-visual-config <kind> <slug> '<json>'
 ```
 
 Also author a short **Latin** `topic` — 2 to 5 English words naming the field,
 e.g. `AI reputation management and data analytics` — and store it:
 
 ```
-node scripts/generation-queue.mjs set-topic <kind> <slug> "<topic>"
+node "$env:USERPROFILE\.config\opencode\skills\creative\generate-image-cover\scripts\queue.mjs" set-topic <kind> <slug> "<topic>"
 ```
 
 The opener interpolates this `topic` after "about". Never leave Cyrillic here:
@@ -154,7 +154,7 @@ Also author the **`object`** — a short **Latin** name of the concrete subject 
 image is about, stored via:
 
 ```
-node scripts/generation-queue.mjs set-object <kind> <slug> "<object>"
+node "$env:USERPROFILE\.config\opencode\skills\creative\generate-image-cover\scripts\queue.mjs" set-object <kind> <slug> "<object>"
 ```
 
 `object` is the concrete subject of the frame, distinct from the longer `topic`.
@@ -168,7 +168,7 @@ Also author exactly **ten English `keywords`**, each a key of
 fails the queue guard), and store them:
 
 ```
-node scripts/generation-queue.mjs set-keywords <kind> <slug> "a, b, c"
+node "$env:USERPROFILE\.config\opencode\skills\creative\generate-image-cover\scripts\queue.mjs" set-keywords <kind> <slug> "a, b, c"
 ```
 
 The builder resolves the first matching keyword to one supporting motif. The
@@ -178,7 +178,7 @@ the actual trade objects.
 ## 3. Story gate (advisory)
 
 ```
-node .opencode/skills/creative/generate-image-cover/scripts/story-gate.mjs <kind> <slug>
+node "$env:USERPROFILE\.config\opencode\skills\creative\generate-image-cover\scripts\story-gate.mjs" <kind> <slug>
 ```
 
 Jev judges the scene (the compiled `visual_config`, or `story` when one remains):

@@ -9,7 +9,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { getEntry } from "../../../../scripts/generation-queue.mjs";
+import { getEntry } from "#lib/generation-queue.mjs";
 
 const ROOT = process.cwd();
 const ARTICLES = path.join(ROOT, "articles");
@@ -98,7 +98,7 @@ function cover(slug) {
   return null;
 }
 
-const pending = (slug) => Boolean(getEntry("article", slug));
+const pending = (slug) => Boolean(getEntry("article", slug, { root: ROOT }));
 
 function targetPublished(type, slug) {
   const file = path.join(TARGET_DIRS[type] ?? "", `${slug}.ts`);

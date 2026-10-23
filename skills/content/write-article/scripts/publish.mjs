@@ -16,7 +16,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { labelPublished } from "#lib/jev/calibration-log.mjs";
-import { removeEntry } from "../../../../scripts/generation-queue.mjs";
+import { removeEntry } from "#lib/generation-queue.mjs";
 
 const ROOT = process.cwd();
 const ARTICLES = path.join(ROOT, "articles");
@@ -93,7 +93,7 @@ for (const slug of slugs) {
     if (fs.existsSync(ruFile)) {
       labelPublished({ kind: "article", slug, lang: "ru", body: fs.readFileSync(ruFile, "utf8") });
     }
-    removeEntry("article", slug);
+    removeEntry("article", slug, { root: ROOT });
   }
   console.log(`   ${dryRun ? "уберёт" : "убрал"} запись — content/generation-queue.json`);
   changed++;

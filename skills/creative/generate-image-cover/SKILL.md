@@ -34,21 +34,37 @@ supporting motif may be resolved from `keywords`.
 1. **Dispatch `art-agent`** with `kind` and `slug`. It reads the finished copy,
    inventories the concrete entities, authors a structured `visual_config` and
    exactly ten English `keywords` (each a key of
-   `docs/image-prompts/keyword-motifs.mjs`) into the record, runs the advisory
-   scene gate
-   (`.opencode/skills/creative/generate-image-cover/scripts/story-gate.mjs`), builds
-   `<slug>.prompt.txt` with `image-prompt.mjs --force`, renders once through the
-   Runware MCP, verifies real pixels (≥1200×630, no resize) and places it as
-   `<slug>.png`.
+   `docs/image-prompts/keyword-motifs.mjs`) into the record with
+   `scripts/queue.mjs set-visual-config`, runs the advisory scene gate
+   (`scripts/story-gate.mjs`), builds `<slug>.prompt.txt` with
+   `image-prompt.mjs --force`, renders once through the Runware MCP, verifies real
+   pixels (≥1200×630, no resize) and places it as `<slug>.png`.
 2. Report the placed `<slug>.png`. The queue record stays until the publishing
    pipeline drops it — this skill never removes it.
 
-## Builder
+## Scripts
+
+Paths below are relative to this skill directory. From the project root, spell
+out the global mount:
+
+```powershell
+node "$env:USERPROFILE\.config\opencode\skills\creative\generate-image-cover\scripts\queue.mjs" list --json
+```
 
 ```
-node .opencode/skills/creative/generate-image-cover/scripts/image-prompt.mjs <kind> <slug> [--idea "..."] [--lang "..."] [--force] [--print]
-node .opencode/skills/creative/generate-image-cover/scripts/image-prompt.mjs <kind> --all [--force]
+node <this-skill>/scripts/queue.mjs list [--kind article|service|solution] [--json]
+node <this-skill>/scripts/queue.mjs get|remove <kind> <slug>
+node <this-skill>/scripts/queue.mjs add --kind <k> --slug <s> --title "<t>" --keywords "a, b" [--object "<o>"] [--topic "<t>"] [--visual-config '<json>']
+node <this-skill>/scripts/queue.mjs set-visual-config|set-topic|set-object|set-keywords <kind> <slug> <value>
+node <this-skill>/scripts/image-prompt.mjs <kind> <slug> [--idea "..."] [--lang "..."] [--force] [--print]
+node <this-skill>/scripts/image-prompt.mjs <kind> --all [--force]
+node <this-skill>/scripts/story-gate.mjs <kind> <slug> [--advisory]
 ```
+
+The queue engine is `lib/generation-queue.mjs`; the CLI only adds the project's
+composition normalizer. The visual language in `docs/image-prompts/` is project
+data, loaded from the project the script runs in. A project without those modules
+gets a clear error instead of a broken prompt.
 
 The scene comes from the record's `visual_config` (compiled by `buildScene()`)
 and a deterministic slug-derived composition. There is no per-kind prompt branch

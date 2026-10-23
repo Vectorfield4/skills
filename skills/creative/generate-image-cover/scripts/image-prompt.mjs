@@ -7,16 +7,20 @@
  * slots from `content/generation-queue.json` and writes `<slug>.prompt.txt` next
  * to the image.
  *
+ * The visual language is project data: `docs/image-prompts/*` and the queue file
+ * are read from the project the script runs in, never imported from this repo.
+ * A project without those modules gets a clear error, not a broken prompt.
+ *
  * The pickers (`getNewsCover`, `getServiceImage`) glob only
  * `*.{png,jpg,jpeg,webp}`, so `.prompt.txt` files are ignored by the build.
  *
  * Usage:
- *   node .opencode/skills/creative/generate-image-cover/scripts/image-prompt.mjs article <slug> [--idea "..."] [--lang "..."] [--force] [--print]
- *   node .opencode/skills/creative/generate-image-cover/scripts/image-prompt.mjs service <slug> [--idea "..."] [--topic "..."] [--lang "..."] [--force] [--print]
- *   node .opencode/skills/creative/generate-image-cover/scripts/image-prompt.mjs solution <slug> [--idea "..."] [--lang "..."] [--force] [--print]
- *   node .opencode/skills/creative/generate-image-cover/scripts/image-prompt.mjs article --all [--force]
- *   node .opencode/skills/creative/generate-image-cover/scripts/image-prompt.mjs service --all [--force]
- *   node .opencode/skills/creative/generate-image-cover/scripts/image-prompt.mjs solution --all [--force]
+ *   node <skill>/scripts/image-prompt.mjs article <slug> [--idea "..."] [--lang "..."] [--force] [--print]
+ *   node <skill>/scripts/image-prompt.mjs service <slug> [--idea "..."] [--topic "..."] [--lang "..."] [--force] [--print]
+ *   node <skill>/scripts/image-prompt.mjs solution <slug> [--idea "..."] [--lang "..."] [--force] [--print]
+ *   node <skill>/scripts/image-prompt.mjs article --all [--force]
+ *   node <skill>/scripts/image-prompt.mjs service --all [--force]
+ *   node <skill>/scripts/image-prompt.mjs solution --all [--force]
  *
  * The visual idea comes from `visual_config`, with a deterministic composition
  * derived from the slug when no explicit override is present. Keywords add one
@@ -25,35 +29,56 @@
  * entry with no `visual_config` gets a `[TODO: ...]` marker.
  */
 
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-import { compositionFor, compositionKeyFor } from "../../../../docs/image-prompts/composition.mjs";
-import { resolveKeywordMotifs } from "../../../../docs/image-prompts/keyword-motifs.mjs";
-import {
-  resolveControlElements,
-  resolveDisplayElements,
-  resolveEmblem,
-  VISUAL_COMPOSITIONS,
-} from "../../../../docs/image-prompts/ui-primitives.mjs";
-import { readQueue } from "../../../../scripts/generation-queue.mjs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { pathToFileURL } from "node:url";
 
-const KINDS = {
-  article: { outDir: "assets/images/articles" },
-  service: { outDir: "assets/images/services" },
-  solution: { outDir: "assets/images/solutions" },
-};
-const TEMPLATE = "docs/image-prompts/scene-defined/image.txt";
-const STYLE_FILE = "docs/image-prompts/cover-style.txt";
+import { KIND_DIRS, readQueue } from "#lib/generation-queue.mjs";
+import { projectRoot } from "#lib/project.mjs";
+
+const root = projectRoot();
+
+/**
+ * The project's visual language, loaded from `docs/image-prompts/`. Every module
+ * is project data: composition staging, keyword motifs, UI primitives.
+ */
+async function loadVisualLanguage(projectDir) {
+  const dir = join(projectDir, "docs/image-prompts");
+  const files = ["composition.mjs", "keyword-motifs.mjs", "ui-primitives.mjs"];
+  const missing = files.filter((file) => !existsSync(join(dir, file)));
+  if (missing.length > 0) {
+    throw new Error(
+      `this project has no docs/image-prompts/${missing.join(", ")}; the visual language is project data`,
+    );
+  }
+
+  const [composition, motifs, primitives] = await Promise.all(
+    files.map((file) => import(pathToFileURL(join(dir, file)).href)),
+  );
+  return {
+    compositionFor: composition.compositionFor,
+    compositionKeyFor: composition.compositionKeyFor,
+    resolveKeywordMotifs: motifs.resolveKeywordMotifs,
+    resolveControlElements: primitives.resolveControlElements,
+    resolveDisplayElements: primitives.resolveDisplayElements,
+    resolveEmblem: primitives.resolveEmblem,
+    VISUAL_COMPOSITIONS: primitives.VISUAL_COMPOSITIONS,
+  };
+}
+
+const visual = await loadVisualLanguage(root);
+const TEMPLATE = join(root, "docs/image-prompts/scene-defined/image.txt");
+const STYLE_FILE = join(root, "docs/image-prompts/cover-style.txt");
 /** Default {{LANG}} value; override with `--lang`. */
 const DEFAULT_LANG = "neutral, no visible text on image";
 
 const USAGE = `Usage:
-  node .opencode/skills/creative/generate-image-cover/scripts/image-prompt.mjs article <slug> [--idea "..."] [--lang "..."] [--force] [--print]
-  node .opencode/skills/creative/generate-image-cover/scripts/image-prompt.mjs service <slug> [--idea "..."] [--topic "..."] [--lang "..."] [--force] [--print]
-  node .opencode/skills/creative/generate-image-cover/scripts/image-prompt.mjs solution <slug> [--idea "..."] [--lang "..."] [--force] [--print]
-  node .opencode/skills/creative/generate-image-cover/scripts/image-prompt.mjs article --all [--force]
-  node .opencode/skills/creative/generate-image-cover/scripts/image-prompt.mjs service --all [--force]
-  node .opencode/skills/creative/generate-image-cover/scripts/image-prompt.mjs solution --all [--force]`;
+  node <skill>/scripts/image-prompt.mjs article <slug> [--idea "..."] [--lang "..."] [--force] [--print]
+  node <skill>/scripts/image-prompt.mjs service <slug> [--idea "..."] [--topic "..."] [--lang "..."] [--force] [--print]
+  node <skill>/scripts/image-prompt.mjs solution <slug> [--idea "..."] [--lang "..."] [--force] [--print]
+  node <skill>/scripts/image-prompt.mjs article --all [--force]
+  node <skill>/scripts/image-prompt.mjs service --all [--force]
+  node <skill>/scripts/image-prompt.mjs solution --all [--force]`;
 
 function parseArgs(argv) {
   const flags = {
@@ -89,11 +114,11 @@ function parseArgs(argv) {
   return { ...flags, positional };
 }
 
-/** `laser_prism` → `laser prism`, so a token reads as prose inside the prompt. */
+/** `laser_prism` -> `laser prism`, so a token reads as prose inside the prompt. */
 const humanize = (token) => String(token).replace(/_/g, " ");
 
 /**
- * `visual_config` → `{{VISUAL_IDEA}}`. The same composition pool and builder are
+ * `visual_config` -> `{{VISUAL_IDEA}}`. The same composition pool and builder are
  * used for every entity kind; the slug deterministically fills a missing
  * composition, and there is no legacy centered fallback.
  */
@@ -101,18 +126,20 @@ const MAX_SCREENS = 3;
 
 /** Compile one scene from the shared composition pool. */
 function buildScene(config, slug) {
-  const composition = compositionFor(slug, config.composition);
+  const composition = visual.compositionFor(slug, config.composition);
   if (!composition) return undefined;
-  const screens = resolveDisplayElements(config.display_elements ?? []).slice(0, MAX_SCREENS);
+  const screens = visual
+    .resolveDisplayElements(config.display_elements ?? [])
+    .slice(0, MAX_SCREENS);
   const formation = composition.formation.replace("{{SCREENS}}", screens.join("; "));
-  const controls = resolveControlElements(config.control_layer ?? []);
+  const controls = visual.resolveControlElements(config.control_layer ?? []);
   const controlText = controls.length
     ? ` Integrated into the physical slate body are organs of manual control: ${controls.join(", and ")}.`
     : "";
   const glow = humanize(config.environment_glow);
   // A domain `emblem` (a medical cross, a gear) replaces the abstract focal node.
   const focal =
-    resolveEmblem(config.emblem) ?? `a single polished ${humanize(config.focal_element)}`;
+    visual.resolveEmblem(config.emblem) ?? `a single polished ${humanize(config.focal_element)}`;
 
   const screenText = screens.length
     ? ` Exactly ${screens.length} translucent frosted glass panels support the physical scene: ${formation}.`
@@ -133,7 +160,7 @@ function compileVisualIdea(entry, override) {
 
 /** Add one concrete motif; the composition and subject remain primary. */
 function motifSentence(keywords) {
-  const motifs = resolveKeywordMotifs(keywords, 1);
+  const motifs = visual.resolveKeywordMotifs(keywords, 1);
   return motifs.length ? ` A small supporting detail is ${motifs[0]}.` : "";
 }
 
@@ -156,20 +183,20 @@ function valuesFor(entry, { visualIdea, topic, lang, style }) {
 
 const { idea, topic, lang, force, print, all, positional } = parseArgs(process.argv.slice(2));
 const [kind, slug] = positional;
-const spec = KINDS[kind];
 
-if (!spec || (!all && !slug)) {
+if (!KIND_DIRS[kind] || (!all && !slug)) {
   console.error(USAGE);
   process.exit(1);
 }
 
-const entries = readQueue().filter((entry) => entry.kind === kind);
+const entries = readQueue({ root }).filter((entry) => entry.kind === kind);
 const targets = all ? entries : entries.filter((entry) => entry.slug === slug);
 if (targets.length === 0) {
   console.error(`slug "${slug}" is not in the generation queue for kind "${kind}"`);
   process.exit(1);
 }
 
+const outDir = KIND_DIRS[kind];
 const template = readFileSync(TEMPLATE, "utf8");
 const style = readFileSync(STYLE_FILE, "utf8").trimEnd();
 /**
@@ -183,8 +210,8 @@ function toMeta(entry) {
     delete config.topology;
     delete config.hardware_archetype;
     delete config.slot_locking;
-    if (!VISUAL_COMPOSITIONS[config.composition]) {
-      config.composition = compositionKeyFor(entry.slug);
+    if (!visual.VISUAL_COMPOSITIONS[config.composition]) {
+      config.composition = visual.compositionKeyFor(entry.slug);
     }
   }
   const meta = {
@@ -202,9 +229,10 @@ function toMeta(entry) {
 
 const written = [];
 for (const entry of targets) {
-  const outPath = join(spec.outDir, `${entry.slug}.prompt.txt`);
+  const outRel = join(outDir, `${entry.slug}.prompt.txt`);
+  const outPath = join(root, outRel);
   if (existsSync(outPath) && !force) {
-    written.push(`skip (exists): ${outPath}`);
+    written.push(`skip (exists): ${outRel}`);
     continue;
   }
   const values = valuesFor(entry, {
@@ -214,12 +242,13 @@ for (const entry of targets) {
     style,
   });
   const text = `${fill(template, values).trimEnd()}\n`;
+  mkdirSync(dirname(outPath), { recursive: true });
   writeFileSync(outPath, text, "utf8");
   // Sidecar metadata next to the image; the pickers only read png/jpg/jpeg/webp.
-  const metaPath = join(spec.outDir, `${entry.slug}.meta.json`);
-  writeFileSync(metaPath, `${JSON.stringify(toMeta(entry), null, 2)}\n`, "utf8");
-  written.push(outPath, metaPath);
-  if (print) console.log(`\n--- ${outPath} ---\n${text}`);
+  const metaRel = join(outDir, `${entry.slug}.meta.json`);
+  writeFileSync(join(root, metaRel), `${JSON.stringify(toMeta(entry), null, 2)}\n`, "utf8");
+  written.push(outRel, metaRel);
+  if (print) console.log(`\n--- ${outRel} ---\n${text}`);
 }
 
 for (const path of written) console.log(path);

@@ -10,7 +10,7 @@ copy.
 ```
 agent/          subagent definitions (prose-critic, art-agent, ...)
 skills/         SKILL.md + optional scripts/ per skill, grouped by domain
-lib/            shared engine: http, cli, env, article-search and wp helpers, jev/ (gates), prose/ (rubrics)
+lib/            shared engine: http, cli, env, article-search and wp helpers, generation-queue, jev/ (gates), prose/ (rubrics)
 test/           vitest tests for that shared code
 ```
 
@@ -18,10 +18,10 @@ Entry points live inside their skill, at `skills/<domain>/<skill>/scripts/`. The
 repo keeps no `bin/`.
 
 `docs/` and `scripts/` are junctions into the content project (its `docs` and
-`scripts` directories): the cover pipeline imports
-`docs/image-prompts/*`, and several skills import the generation queue from
-`scripts/generation-queue.mjs`. They are local, untracked, and unrelated to the
-`lib/` move — `npm install` leaves them alone.
+`scripts` directories), kept for local browsing. No skill imports through them:
+the queue engine is `lib/generation-queue.mjs`, and the cover pipeline reads the
+project's `docs/image-prompts/*` from the working directory at run time, because
+that visual language is project data. The junctions are local and untracked.
 
 ## Scripts inside skills
 
