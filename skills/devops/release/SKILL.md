@@ -103,24 +103,30 @@ file with no checklist, stays.
     "plansDir": "docs/plans",
     "tagPattern": "v[0-9]*.[0-9]*.[0-9]*",
     "manifest": "package.json"
-  },
-  "commitConvention": {
-    "types": { "design": "interface" }
   }
 }
 ```
 
-`commitConvention.types` adds a prefix to an existing group. `commitConvention.groups`
-replaces the group list wholesale. Defaults cover Conventional Commits plus the
-area prefixes this repo family uses (`content`, `service`, `agent`, `interface`,
-and so on).
+`commit-convention.json` at the project root is separate, and the `commit-msg`
+hook reads the same file:
+
+```json
+{
+  "types": { "design": "interface" }
+}
+```
+
+`types` maps an extra prefix to an existing group. `groups` replaces the group
+list wholesale. Defaults cover Conventional Commits plus the area prefixes this
+repo family uses (`content`, `service`, `agent`, `interface`, and so on).
 
 ## Hooks and the template copy
 
-`scripts/version.mjs` in the project is a copy of `lib/templates/version.mjs`: a
-husky hook runs without this repository mounted, so it cannot import `#lib/*`.
-That copy is the one deliberate duplicate in the setup. Reinstall it from the
-template instead of editing it.
+`scripts/version.mjs` and `scripts/commit-msg.mjs` in the project are copies of
+`lib/templates/*`: a husky hook runs without this repository mounted, so it
+cannot import `#lib/*`. Those copies are the one deliberate duplicate in the
+setup. Reinstall them from the templates instead of editing them; `doctor` fails
+when either drifts.
 
 ## Acceptance criteria
 

@@ -168,6 +168,19 @@ describe("release plan and apply", () => {
     expect(git(["log", "-1", "--pretty=%s"]).trim()).toBe("chore(release): v1.1.0");
   });
 
+  it("reads project commit types from commit-convention.json", () => {
+    writeFileSync(
+      join(root, "commit-convention.json"),
+      JSON.stringify({ types: { design: "interface" } }),
+    );
+    git(["add", "-A"]);
+    git(["commit", "-m", "design: tokens"]);
+
+    const plan = planRelease("minor", { root });
+    expect(plan.groups.map((group) => group.key)).toContain("interface");
+    expect(plan.changelog).toContain("tokens");
+  });
+
   it("flags a major release for confirmation and an unknown bump as a failure", () => {
     expect(planRelease("major", { root }).needsConfirmation).toBe(true);
     expect(planRelease("huge", { root })).toMatchObject({ ok: false });

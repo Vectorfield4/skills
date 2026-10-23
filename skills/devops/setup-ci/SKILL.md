@@ -12,8 +12,11 @@ Run once during repository initialization.
 1. Install and configure husky (mandatory):
    - `npm install --save-dev husky`
    - `npx husky init`
-   - Install the version hook: `node <base>/scripts/install-version-hook.mjs .`
-     (writes `scripts/version.mjs` and rewrites `.husky/pre-commit` to `npm run lint && node scripts/version.mjs hook`)
+   - Install the git hooks: `node <base>/scripts/install-git-hooks.mjs .`
+     (writes `scripts/version.mjs`, `scripts/commit-msg.mjs`, `.husky/pre-commit`
+     running `npm run lint && node scripts/version.mjs hook`, `.husky/commit-msg`
+     running `node scripts/commit-msg.mjs "$1"`, and a starter
+     `commit-convention.json` when the project has none)
    - Ensure `package.json` has `"prepare": "husky"` in scripts.
    - Run `npm run lint` locally; it must pass (exit 0) before continuing.
 

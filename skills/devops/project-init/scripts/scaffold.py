@@ -44,7 +44,7 @@ pkg = (SCRIPT_DIR.parent / "references/package.json").read_text()
 
 # Version hook (scripts/version.mjs + .husky/pre-commit) from the shared installer.
 import subprocess
-installer = SCRIPT_DIR.parents[1] / "setup-ci" / "scripts" / "install-version-hook.mjs"
+installer = SCRIPT_DIR.parents[1] / "setup-ci" / "scripts" / "install-git-hooks.mjs"
 if installer.exists():
     subprocess.run(["node", str(installer), str(TARGET)], check=False)
 
