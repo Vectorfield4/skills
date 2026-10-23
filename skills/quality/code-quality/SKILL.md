@@ -21,8 +21,8 @@ wiring (`scripts/jev-review.mjs`).
 Run from the repo root.
 
 ```
-node .opencode/skills/quality/code-quality/scripts/jev-review.mjs <path...> [--json] [--advisory] [--min-confidence 0.5]
-node .opencode/skills/quality/code-quality/scripts/jev-review.mjs --stdin [--json] [--advisory]
+node "$env:USERPROFILE\.config\opencode\skills\quality\code-quality\scripts\jev-review.mjs" <path...> [--json] [--advisory] [--min-confidence 0.5]
+node "$env:USERPROFILE\.config\opencode\skills\quality\code-quality\scripts\jev-review.mjs" --stdin [--json] [--advisory]
 ```
 
 - A path is a file or a directory; a directory is walked recursively for
@@ -44,7 +44,7 @@ and the fixes live in `references/solid-soc.md`.
 ## Procedure
 
 1. Run the CLI over the change set, e.g.
-   `node .opencode/skills/quality/code-quality/scripts/jev-review.mjs src/features src/widgets`.
+   `node "$env:USERPROFILE\.config\opencode\skills\quality\code-quality\scripts\jev-review.mjs" src/features src/widgets`.
 2. For each candidate, open the file at the reported line and judge it against
    the principle in `references/solid-soc.md`.
 3. Fix or dismiss. Re-run until the report is empty or every remaining hit is an

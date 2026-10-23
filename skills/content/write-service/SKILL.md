@@ -22,10 +22,10 @@ Run from the repo root. Both take slugs; with no slugs `audit.mjs` checks every
 `draft: true` service.
 
 ```
-node .opencode/skills/content/write-service/scripts/audit.mjs [slug ...]
-node .opencode/skills/content/write-service/scripts/publish.mjs [--dry-run] [--force] <slug ...>
-node .opencode/skills/content/write-service/scripts/jev-review.mjs <slug> [--lang ru|en] [--json]
-node .opencode/skills/content/write-service/scripts/jev-review.mjs --stdin [--json]
+node "$env:USERPROFILE\.config\opencode\skills\content\write-service\scripts\audit.mjs" [slug ...]
+node "$env:USERPROFILE\.config\opencode\skills\content\write-service\scripts\publish.mjs" [--dry-run] [--force] <slug ...>
+node "$env:USERPROFILE\.config\opencode\skills\content\write-service\scripts\jev-review.mjs" <slug> [--lang ru|en] [--json]
+node "$env:USERPROFILE\.config\opencode\skills\content\write-service\scripts\jev-review.mjs" --stdin [--json]
 ```
 
 - **`audit.mjs`** — readiness check: backdrop file and PNG size (≥1200×630),
@@ -55,13 +55,13 @@ the source of truth.
    ≥1200×630, no legible text, calm lower third, subject in the upper two-thirds).
 2. Write the RU/EN copy. While a block is still in your buffer, check it inline
    before it lands in the dictionary: `"<prose>" |
-   node .opencode/skills/content/write-service/scripts/jev-review.mjs --stdin` returns the
+   node "$env:USERPROFILE\.config\opencode\skills\content\write-service\scripts\jev-review.mjs" --stdin` returns the
    G1 filter candidates for that fragment. Advisory — fix or accept each hit. Then
-   `node .opencode/skills/content/write-service/scripts/audit.mjs <slug> …` — clear
+   `node "$env:USERPROFILE\.config\opencode\skills\content\write-service\scripts\audit.mjs" <slug> …` — clear
    every ✗. In practice this is RU copy under 700 words: write it up, then
    re-run the audit.
 3. **Jev review + circuit breaker:** `node
-   .opencode/skills/content/write-service/scripts/jev-review.mjs <slug> --gate`. Branch on
+   ~/.config/opencode/skills/content/write-service/scripts/jev-review.mjs <slug> --gate`. Branch on
    the `verdict`: `fail` → return to step 2, the critic is skipped; `review` →
    step 4 full gate; `clean` → step 4 light confirm. Advisory findings go to the
    critic; see `../write-article/references/jev.md`. Skips without `RUNWARE_API_KEY`.
@@ -70,7 +70,7 @@ the source of truth.
    the RU and EN copy and returns a violation log or `VERDICT: PASS`. Fix the log
    and re-run until it passes. A service does not leave draft while the critic
    has an open finding.
-5. `node .opencode/skills/content/write-service/scripts/publish.mjs <slug> …`.
+5. `node "$env:USERPROFILE\.config\opencode\skills\content\write-service\scripts\publish.mjs" <slug> …`.
 6. `npm run lint && npm run test && npm run verify`.
 
 ## Prose gate

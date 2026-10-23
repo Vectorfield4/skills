@@ -2,8 +2,8 @@
 // Jev review CLI for source code (skill: code-quality).
 //
 // Usage:
-//   node .opencode/skills/quality/code-quality/scripts/jev-review.mjs <path...> [--json] [--advisory] [--min-confidence 0.5]
-//   node .opencode/skills/quality/code-quality/scripts/jev-review.mjs --stdin [--json] [--advisory]
+//   node "$env:USERPROFILE\.config\opencode\skills\quality\code-quality\scripts\jev-review.mjs" <path...> [--json] [--advisory] [--min-confidence 0.5]
+//   node "$env:USERPROFILE\.config\opencode\skills\quality\code-quality\scripts\jev-review.mjs" --stdin [--json] [--advisory]
 //
 // Reviews the top-level functions and classes of each file for SOLID and
 // separation-of-concerns violations. Advisory: Jev labels candidates, it does

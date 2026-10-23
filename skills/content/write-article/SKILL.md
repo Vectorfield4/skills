@@ -49,11 +49,11 @@ Run from the repo root. `audit.mjs` and `publish.mjs` take slugs; with no slugs
 to the syntax gates.
 
 ```
-node .opencode/skills/content/write-article/scripts/audit.mjs [slug ...]
-node .opencode/skills/content/write-article/scripts/publish.mjs [--dry-run] [--force] <slug ...>
-node .opencode/skills/content/write-article/scripts/density.mjs <file...> [--json] [--verbose]
-node .opencode/skills/content/write-article/scripts/jev-review.mjs <slug> [--lang ru|en] [--json] [--gate]
-node .opencode/skills/content/write-article/scripts/jev-review.mjs --stdin [--json]
+node "$env:USERPROFILE\.config\opencode\skills\content\write-article\scripts\audit.mjs" [slug ...]
+node "$env:USERPROFILE\.config\opencode\skills\content\write-article\scripts\publish.mjs" [--dry-run] [--force] <slug ...>
+node "$env:USERPROFILE\.config\opencode\skills\content\write-article\scripts\density.mjs" <file...> [--json] [--verbose]
+node "$env:USERPROFILE\.config\opencode\skills\content\write-article\scripts\jev-review.mjs" <slug> [--lang ru|en] [--json] [--gate]
+node "$env:USERPROFILE\.config\opencode\skills\content\write-article\scripts\jev-review.mjs" --stdin [--json]
 node lib/prose/eval.mjs
 ```
 
@@ -92,7 +92,7 @@ The volume and cover numbers in `audit.mjs` mirror `test/articles.test.ts`;
    or a link target.
 3. Write RU first. One structure, one CTA, a number in every claim. As each
    section is drafted, check it inline before it lands in the file:
-   `"<section>" | node .opencode/skills/content/write-article/scripts/jev-review.mjs --stdin`
+   `"<section>" | node "$env:USERPROFILE\.config\opencode\skills\content\write-article\scripts\jev-review.mjs" --stdin`
    returns the G1 filter candidates for that fragment. Advisory — fix or accept
    each hit.
 4. Write the EN mirror when the calendar row is marked `RU+EN`; it is not
@@ -112,11 +112,11 @@ The volume and cover numbers in `audit.mjs` mirror `test/articles.test.ts`;
    published entities. A new article is a draft by default: the field is absent
    or `draft: true`, and it takes `draft: false` only at publication. `author`
    stays empty (default team by locale).
-7. `node .opencode/skills/content/write-article/scripts/audit.mjs <slug> …` — clear every
+7. `node "$env:USERPROFILE\.config\opencode\skills\content\write-article\scripts\audit.mjs" <slug> …` — clear every
    ✗. In practice this is the cover, a short genre floor, or a related target
    still in draft; fix it, then re-run the audit.
 8. **Jev review + circuit breaker:** `node
-   .opencode/skills/content/write-article/scripts/jev-review.mjs <slug> --gate`. Branch on
+   ~/.config/opencode/skills/content/write-article/scripts/jev-review.mjs <slug> --gate`. Branch on
    the `verdict` (exit `0 clean / 10 review / 20 fail`):
    - `fail` (a G1 `_CANDIDATE` or a genre/structure mismatch) → return to step 3
      and fix the draft; **do not dispatch the critic**.
@@ -131,7 +131,7 @@ The volume and cover numbers in `audit.mjs` mirror `test/articles.test.ts`;
    the primary editorial gate: fix the returned violation log and re-run until
    `VERDICT: PASS`. The agent loads only after an OpenCode restart once its file
    is added.
-10. `node .opencode/skills/content/write-article/scripts/publish.mjs <slug> …`.
+10. `node "$env:USERPROFILE\.config\opencode\skills\content\write-article\scripts\publish.mjs" <slug> …`.
 11. `npm run lint && npm run test && npm run verify`.
 
 ## Prose gate

@@ -21,7 +21,7 @@ else.
 ## Input
 
 The caller passes a `slug`, and may pass the Jev report from
-`.opencode/skills/content/write-service/scripts/jev-review.mjs`. When the report's
+`~/.config/opencode/skills/content/write-service/scripts/jev-review.mjs`. When the report's
 `verdict` is `clean`, run a light confirmation of the axes the sensors cannot
 cover (argument, two readers, the CTA's next step) instead of a full sweep.
 
@@ -37,7 +37,7 @@ the finding (do not invent copy).
 
 Your context starts empty, so read this every run:
 
-- `.opencode/skills/content/write-service/references/service-prose.md`
+- `~/.config/opencode/skills/content/write-service/references/service-prose.md`
 
 That file is self-contained. Do not load another skill's rules or a shared
 checklist; if a rule seems missing, apply the service-prose text as written.

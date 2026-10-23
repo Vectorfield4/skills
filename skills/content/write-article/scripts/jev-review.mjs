@@ -2,8 +2,8 @@
 // Jev review CLI for articles (skill: write-article).
 //
 // Usage:
-//   node .opencode/skills/content/write-article/scripts/jev-review.mjs <slug> [--lang ru|en] [--json] [--advisory] [--gate]
-//   node .opencode/skills/content/write-article/scripts/jev-review.mjs --stdin [--json] [--advisory]
+//   node "$env:USERPROFILE\.config\opencode\skills\content\write-article\scripts\jev-review.mjs" <slug> [--lang ru|en] [--json] [--advisory] [--gate]
+//   node "$env:USERPROFILE\.config\opencode\skills\content\write-article\scripts\jev-review.mjs" --stdin [--json] [--advisory]
 //
 // One batched Jev call per article: G1 (per-unit `noul` prose checklist), the
 // Phase 4 sensors, G3 (genre/structure), G4 (AEO), G2 (links) and G7 (metadata),

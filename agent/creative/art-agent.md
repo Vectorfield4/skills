@@ -189,7 +189,7 @@ credits. Skips without `RUNWARE_API_KEY`.
 ## 4. Build the prompt
 
 ```
-node .opencode/skills/creative/generate-image-cover/scripts/image-prompt.mjs <kind> <slug> --force
+node "$env:USERPROFILE\.config\opencode\skills\creative\generate-image-cover\scripts\image-prompt.mjs" <kind> <slug> --force
 ```
 
 It fills the shared `docs/image-prompts/scene-defined/image.txt` template (plus

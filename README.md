@@ -17,11 +17,10 @@ test/           vitest tests for that shared code
 Entry points live inside their skill, at `skills/<domain>/<skill>/scripts/`. The
 repo keeps no `bin/`.
 
-`docs/` and `scripts/` are junctions into the content project (its `docs` and
-`scripts` directories), kept for local browsing. No skill imports through them:
-the queue engine is `lib/generation-queue.mjs`, and the cover pipeline reads the
-project's `docs/image-prompts/*` from the working directory at run time, because
-that visual language is project data. The junctions are local and untracked.
+The repo keeps no link into a project. The queue engine is
+`lib/generation-queue.mjs`, and the cover pipeline reads the project's
+`docs/image-prompts/*` from the working directory at run time, because that
+visual language is project data.
 
 ## Scripts inside skills
 

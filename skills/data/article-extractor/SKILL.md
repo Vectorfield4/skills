@@ -21,7 +21,7 @@ Candidate URLs come from the `news-fetcher` skill; this one fetches the body.
 From the project root:
 
 ```bash
-node .opencode/skills/data/article-extractor/scripts/extract-article.mjs \
+node ~/.config/opencode/skills/data/article-extractor/scripts/extract-article.mjs \
   https://example.com/article --out article.json
 ```
 

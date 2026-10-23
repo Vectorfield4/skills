@@ -13,10 +13,11 @@ Run once during repository initialization.
    - `npm install --save-dev husky`
    - `npx husky init`
    - Install the git hooks: `node <base>/scripts/install-git-hooks.mjs .`
-     (writes `scripts/version.mjs`, `scripts/commit-msg.mjs`, `.husky/pre-commit`
-     running `npm run lint && node scripts/version.mjs hook`, `.husky/commit-msg`
-     running `node scripts/commit-msg.mjs "$1"`, and a starter
-     `commit-convention.json` when the project has none)
+     (writes `scripts/version.mjs`, `scripts/commit-msg.mjs`, and a starter
+     `commit-convention.json`; adds `.husky/pre-commit` running
+     `npm run lint && node scripts/version.mjs hook` and `.husky/commit-msg`
+     running `node scripts/commit-msg.mjs "$1"`, but never overwrites an existing
+     hook file)
    - Ensure `package.json` has `"prepare": "husky"` in scripts.
    - Run `npm run lint` locally; it must pass (exit 0) before continuing.
 

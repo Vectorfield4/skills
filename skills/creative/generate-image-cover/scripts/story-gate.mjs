@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Advisory gate over a cover/backdrop `story` before the render spends credits.
 //
-//   node .opencode/skills/creative/generate-image-cover/scripts/story-gate.mjs <kind> <slug> [--advisory]
+//   node "$env:USERPROFILE\.config\opencode\skills\creative\generate-image-cover\scripts\story-gate.mjs" <kind> <slug> [--advisory]
 //
 // Reads the queue record's scene — the structured `visual_config`, flattened to
 // a one-line summary, or the deprecated `story` — and asks Jev whether it is

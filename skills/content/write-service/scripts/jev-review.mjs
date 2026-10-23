@@ -2,8 +2,8 @@
 // Jev review CLI for services (skill: write-service).
 //
 // Usage:
-//   node .opencode/skills/content/write-service/scripts/jev-review.mjs <slug> [--lang ru|en] [--json] [--advisory] [--gate]
-//   node .opencode/skills/content/write-service/scripts/jev-review.mjs --stdin [--json] [--advisory]
+//   node "$env:USERPROFILE\.config\opencode\skills\content\write-service\scripts\jev-review.mjs" <slug> [--lang ru|en] [--json] [--advisory] [--gate]
+//   node "$env:USERPROFILE\.config\opencode\skills\content\write-service\scripts\jev-review.mjs" --stdin [--json] [--advisory]
 //
 // One batched Jev call per service: G1 (per-unit `noul` prose checklist),
 // G2 (relevants) and G5 (mechanism, block titles, section items), with a

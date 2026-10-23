@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Publish a service from draft (skill: write-service).
 // Usage:
-//   node .opencode/skills/content/write-service/scripts/publish.mjs [--dry-run] [--force] [--jev] <slug ...>
+//   node "$env:USERPROFILE\.config\opencode\skills\content\write-service\scripts\publish.mjs" [--dry-run] [--force] [--jev] <slug ...>
 // Runs the readiness audit first and skips a slug that is not ready unless
 // --force is passed. With --jev it also runs the advisory Jev review
 // (./jev-review.mjs) and skips a slug that returns candidates, unless

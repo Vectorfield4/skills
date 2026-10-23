@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Readiness audit for publishing a service from draft (skill: write-service).
 // Usage:
-//   node .opencode/skills/content/write-service/scripts/audit.mjs [slug ...]
+//   node "$env:USERPROFILE\.config\opencode\skills\content\write-service\scripts\audit.mjs" [slug ...]
 // With no slugs it audits every service whose fixture has `draft: true`.
 // Exits non-zero while any hard blocker remains. The prose gate here mirrors
 // test/words.ts and test/services/prose-quality.test.ts; `npm run test` stays the

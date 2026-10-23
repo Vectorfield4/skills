@@ -38,10 +38,10 @@ per document**, so the critic starts from a shortlist instead of a blank page.
 ## Commands
 
 ```
-node .opencode/skills/content/write-article/scripts/jev-review.mjs <slug> [--lang ru|en] [--json] [--advisory]
-node .opencode/skills/content/write-service/scripts/jev-review.mjs <slug> [--lang ru|en] [--json] [--advisory]
-node .opencode/skills/content/write-article/scripts/jev-review.mjs --stdin [--json] [--advisory]
-node .opencode/skills/content/write-service/scripts/jev-review.mjs --stdin [--json] [--advisory]
+node "$env:USERPROFILE\.config\opencode\skills\content\write-article\scripts\jev-review.mjs" <slug> [--lang ru|en] [--json] [--advisory]
+node "$env:USERPROFILE\.config\opencode\skills\content\write-service\scripts\jev-review.mjs" <slug> [--lang ru|en] [--json] [--advisory]
+node "$env:USERPROFILE\.config\opencode\skills\content\write-article\scripts\jev-review.mjs" --stdin [--json] [--advisory]
+node "$env:USERPROFILE\.config\opencode\skills\content\write-service\scripts\jev-review.mjs" --stdin [--json] [--advisory]
 node lib/prose/eval.mjs
 ```
 

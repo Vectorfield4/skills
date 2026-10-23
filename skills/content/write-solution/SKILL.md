@@ -21,8 +21,8 @@ owns only its FAQ rubric (`scripts/jev-solution.mjs`), its dictionary parsing
 Run from the repo root.
 
 ```
-node .opencode/skills/content/write-solution/scripts/jev-review.mjs <slug> [--lang ru|en] [--json] [--advisory] [--gate]
-node .opencode/skills/content/write-solution/scripts/jev-review.mjs --stdin [--json] [--advisory]
+node "$env:USERPROFILE\.config\opencode\skills\content\write-solution\scripts\jev-review.mjs" <slug> [--lang ru|en] [--json] [--advisory] [--gate]
+node "$env:USERPROFILE\.config\opencode\skills\content\write-solution\scripts\jev-review.mjs" --stdin [--json] [--advisory]
 ```
 
 - One batched Jev call per solution, split at unit boundaries when the
@@ -44,7 +44,7 @@ node .opencode/skills/content/write-solution/scripts/jev-review.mjs --stdin [--j
 
 ## Procedure
 
-1. `node .opencode/skills/content/write-solution/scripts/jev-review.mjs <slug> --gate`.
+1. `node "$env:USERPROFILE\.config\opencode\skills\content\write-solution\scripts\jev-review.mjs" <slug> --gate`.
 2. Branch on the `verdict`: `fail` → fix the copy (a full critic is skipped);
    `review` → judge each candidate; `clean` → only the advisory findings remain.
 3. Re-run until the verdict is `clean` or every remaining hit is accepted.

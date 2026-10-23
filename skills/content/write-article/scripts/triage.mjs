@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Advisory readiness triage for draft articles (skill: write-article).
 //
-//   node .opencode/skills/content/write-article/scripts/triage.mjs [slug ...] [--json]
+//   node "$env:USERPROFILE\.config\opencode\skills\content\write-article\scripts\triage.mjs" [slug ...] [--json]
 //
 // Ranks drafts by a composite of Jev `score`s so a reviewer reads the
 // closest-to-publish first. Weights live in `WEIGHTS`; each dimension is

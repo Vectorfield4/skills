@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Advisory RU↔EN claim-parity check for an article (skill: write-article).
 //
-//   node .opencode/skills/content/write-article/scripts/parity.mjs <slug> [--json] [--advisory]
+//   node "$env:USERPROFILE\.config\opencode\skills\content\write-article\scripts\parity.mjs" <slug> [--json] [--advisory]
 //
 // Deterministic: the numeric claims in the RU and EN bodies are compared in
 // code (`lib/prose/parity.mjs`). Advisory: one Jev verdict asks whether the two

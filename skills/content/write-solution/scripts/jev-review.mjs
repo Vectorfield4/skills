@@ -2,8 +2,8 @@
 // Jev review CLI for solutions (skill: write-solution).
 //
 // Usage:
-//   node .opencode/skills/content/write-solution/scripts/jev-review.mjs <slug> [--lang ru|en] [--json] [--advisory] [--gate]
-//   node .opencode/skills/content/write-solution/scripts/jev-review.mjs --stdin [--json] [--advisory]
+//   node "$env:USERPROFILE\.config\opencode\skills\content\write-solution\scripts\jev-review.mjs" <slug> [--lang ru|en] [--json] [--advisory] [--gate]
+//   node "$env:USERPROFILE\.config\opencode\skills\content\write-solution\scripts\jev-review.mjs" --stdin [--json] [--advisory]
 //
 // One batched Jev call per solution: G1 (per-unit `noul` prose checklist),
 // G2 (relevants, with a deterministic note-key check) and G6 (FAQ answers), with

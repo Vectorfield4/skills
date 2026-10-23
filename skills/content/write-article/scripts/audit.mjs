@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Readiness audit for publishing an article from draft (skill: write-article).
 // Usage:
-//   node .opencode/skills/content/write-article/scripts/audit.mjs [slug ...]
+//   node "$env:USERPROFILE\.config\opencode\skills\content\write-article\scripts\audit.mjs" [slug ...]
 // With no slugs it audits every draft article: `draft` defaults to true in
 // src/content.config.ts, so any article without `draft: false` is a draft.
 // Exits non-zero while any hard blocker remains. The volume and cover numbers

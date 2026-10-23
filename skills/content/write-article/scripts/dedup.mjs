@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Advisory near-duplicate check for an article (skill: write-article).
 //
-//   node .opencode/skills/content/write-article/scripts/dedup.mjs <slug> [--json] [--advisory]
+//   node "$env:USERPROFILE\.config\opencode\skills\content\write-article\scripts\dedup.mjs" <slug> [--json] [--advisory]
 //
 // Builds a deterministic shortlist of the existing articles whose title and lead
 // share the most tokens with the draft, then asks Jev whether the draft
