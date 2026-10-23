@@ -59,8 +59,8 @@ how deep the skill sits or which project runs it.
 
 Skills that ship scripts: `article-extractor`, `news-fetcher`,
 `thematic-article-search`, `wp-publish`, `generate-image-cover`,
-`project-init`, `write-article`, `write-service`, `write-solution`,
-`code-quality`, `doctor`, `release`.
+`generate-favicon`, `generate-logo`, `project-init`, `write-article`,
+`write-service`, `write-solution`, `code-quality`, `doctor`, `release`.
 
 ## Setup
 
@@ -69,15 +69,16 @@ npm install     # jsdom, @mozilla/readability, vitest
 npm test        # test/*.test.mjs
 ```
 
-Health check of the mounts runs as a skill, not as an npm script:
+The health check of the mounts runs as a skill:
 
 ```bash
 node skills/devops/doctor/scripts/doctor.mjs
 node skills/devops/doctor/scripts/doctor.mjs <project>
 ```
 
-The doctor reads only. Given a project it fails on any `.opencode` directory,
-tracked, gitignored or empty.
+It reads only. With a project path it also fails on `.opencode` leftovers, a
+`scripts/version.mjs` copy that drifted from the template, and engine files that
+moved into skills.
 
 The Jev engine and the prose rubrics are part of this repo (`lib/jev`,
 `lib/prose`) and skill scripts reach them through `#lib/*`, so nothing needs
