@@ -59,7 +59,78 @@ how deep the skill sits or which project runs it.
 Skills that ship scripts: `article-extractor`, `news-fetcher`,
 `thematic-article-search`, `wp-publish`, `generate-image-cover`,
 `generate-favicon`, `generate-logo`, `project-init`, `write-article`,
-`write-service`, `write-solution`, `code-quality`, `doctor`, `release`.
+`write-service`, `write-solution`, `code-quality`, `doctor`, `release`,
+`geo-source-search`, `geo-region-assemble`, `geo-domain-lib`, `product-match`,
+`shop-audit`, `shop-vendors`, `shop-harvest`, `shop-price-ledger`, `shop-tagmap`,
+`shop-plan`, `shop-gate`, `shop-catalog`, `shop-write`, `shop-verify`,
+`shop-report`.
+
+## Shop pipeline
+
+The shop is a deterministic tree: every node is one skill script — flags in,
+stable JSON out, exit `0/1/2`, no knowledge of its caller. That is what lets
+`content-shop-filler` fan the nodes out to subagents.
+
+| Node | Skill script | Output |
+|---|---|---|
+| capabilities | `shop-write/scripts/capabilities.mjs` | `data/<host>/transport.json` |
+| vendors | `shop-vendors/scripts/vendors.mjs` | `data/<host>/sellers.yaml` |
+| aliases | `product-match/scripts/aliases.mjs` | `data/<host>/tag-aliases.json` |
+| audit | `shop-audit/scripts/audit.mjs` | `data/<host>/audit.json` |
+| harvest | `shop-harvest/scripts/harvest.mjs` | `data/<host>/index/*.json` |
+| ledger | `shop-price-ledger/scripts/ledger.mjs` | `data/<host>/prices.yaml` |
+| tagmap | `shop-tagmap/scripts/tagmap.mjs` | `data/<host>/tagged-index.json` |
+| plan | `shop-plan/scripts/plan.mjs` | `data/<host>/plan.json` |
+| gate | `shop-gate/scripts/gate.mjs` | `data/<host>/gated.json` |
+| catalog | `shop-catalog/scripts/merge.mjs` | `products/catalog.json` |
+| write | `shop-write/scripts/write-rest.mjs` \| `write-wp-payload.mjs` | WooCommerce |
+| verify | `shop-verify/scripts/verify.mjs` | `data/<host>/verify-*.json` |
+| report | `shop-report/scripts/report.mjs` | `data/<host>/runs/<stamp>/summary.json` |
+
+Three invariants hold across the tree: a product enters only with a tag the blog
+uses; the brand allowlist is internal scoring; a price never leaves
+`data/<host>/prices.yaml`. The project's `/add-products` command raises
+`content-shop-filler`; `content-shop-optimizer` measures the run and makes the
+second pass cheaper.
+
+## News article pipeline
+
+A plain news site keeps only `articles/<slug>.ru.md` + `.en.md` pairs: no
+`content/plan/`, no generation queue, no cover gate, no `related*` entities.
+That site has one owner: the `content-translate-related-articles` agent
+(`agent/content/translate-related-articles.md`).
+
+Call it and name the step range — nothing else:
+
+> `content-translate-related-articles`: add two fresh robotics articles from
+> `scripts/sources.json`, RU + EN, verify and commit. Do not publish.
+
+The agent runs the chain in order:
+
+| # | Skill | Job |
+|---|---|---|
+| 1 | `news-fetcher` (or `thematic-article-search --topic`) | candidates from the project's sources (`scripts/sources.json`, `docs/article-sources.md`) |
+| 2 | `candidates-triage`, then `published-check` | drop duplicates; skip a story whose pair and translation already exist |
+| 3 | `article-extractor` (`try-parse-url` on failure) | the article body |
+| 4 | `translate-article` | the site-language article and its `.en.md` mirror |
+| 5 | `product-match` (through `content-product-scout`) | products for the tags the article uses, images copied into the project, caption = model name; keeps `data/<host>/tags.yaml` fresh |
+| 6 | `wp-publish` -> `wp-record` -> `wp-sync-tags` | optional publish, then frontmatter write-back |
+
+Gate 2 is the one that prevents duplicated work: a `published` match is skipped,
+a `draft` match is finished rather than re-fetched, and a `wp_slug` match means
+the archive is behind WordPress, not that the story is new.
+
+Step 5 reads the tag registry before it touches WordPress. `data/<host>/tags.yaml`
+holds every tag with `count` and `latestUpdate`, plus `synced_at` and `ttl_hours`.
+Article runs bump the counters they use; a full tag pull through the WordPress
+skill (`ewpa/get-tags`) happens only when `synced_at` is older than four hours —
+that is what the `content-product-scout` agent owns. A fresh registry means no
+WordPress call for tags at all.
+
+Every chain skill stays individually usable: run one directly only when the
+caller wants that single step. `write-article` is the other pipeline — it owns
+the service site (content plan, generation queue, cover gate, related entities)
+and must not be used on a plain news site.
 
 ## Setup
 
