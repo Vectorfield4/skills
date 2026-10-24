@@ -255,7 +255,7 @@ describe("plan", () => {
   };
   const tagged = {
     products: [
-      { sku: "NEW-1", name: "Unitree G1", brand: "Unitree", tags: ["гуманоиды"], image: "i", description: "d".repeat(120), price: "20000" },
+      { sku: "NEW-1", name: "Unitree G1", brand: "Unitree", tags: ["гуманоиды", "навигация"], image: "i", description: "d".repeat(120), price: "20000" },
       { sku: "NEW-2", name: "Unitree X2", brand: "Other", tags: ["гуманоиды"], image: "", description: "", price: "1" },
       { sku: "HR-OLD", name: "Old", brand: "Unitree", tags: ["гуманоиды"], image: "i" },
       { sku: "NEW-3", name: "Unitree Go2", brand: "Unitree", tags: ["навигация"], image: "i", description: "d".repeat(120), price: "30000" },
@@ -294,15 +294,24 @@ describe("plan", () => {
     const candidates = plannedCandidates(plan);
     expect(new Set(candidates.map((item) => item.sku)).size).toBe(candidates.length);
   });
+
+  it("keeps the tags the rules gave a candidate, not only the gap tag", () => {
+    const plan = buildPlan({ audit, tagged, sellers });
+    const first = plannedCandidates(plan).find((item) => item.sku === "NEW-1");
+    expect(first.tags).toContain("гуманоиды");
+    expect(first.tags).toContain("навигация");
+  });
 });
 
 describe("gates", () => {
-  it("rejects a duplicate name or brand+model, but not the product itself", () => {
+  it("rejects a duplicate name, but not the product itself or a sibling model", () => {
     const existing = [{ sku: "HR-1", name: "Unitree G1" }];
-    // The same sku is an enrichment of that entry, not a duplicate.
     expect(uniqueVerdict({ sku: "hr-1", name: "Unitree G1" }, existing).ok).toBe(true);
     expect(uniqueVerdict({ sku: "X", name: "unitree  g1" }, existing).ok).toBe(false);
-    expect(uniqueVerdict({ sku: "X", name: "Unitree G1 Pro" }, existing).ok).toBe(false);
+    expect(uniqueVerdict({ sku: "X", name: "Unitree G1 Pro" }, existing).ok).toBe(true);
+    expect(uniqueVerdict({ sku: "X", name: "Unitree B2-W" }, [{ sku: "Y", name: "Unitree B2" }]).ok).toBe(
+      true,
+    );
     expect(uniqueVerdict({ sku: "X", name: "Boston Spot" }, existing).ok).toBe(true);
   });
 
@@ -367,6 +376,16 @@ describe("catalog", () => {
     const second = mergeCatalog({ catalog: first.catalog.products, items: [item] });
     expect(JSON.stringify(second.catalog)).toBe(JSON.stringify(first.catalog));
     expect(second.stats.untouched).toEqual(["HR-UNITREE-G1"]);
+  });
+
+  it("never replaces a longer description with a shorter one", () => {
+    const long = { ...item, description: "Русское описание. ".repeat(10) };
+    const first = mergeCatalog({ catalog: [], items: [long] });
+    const second = mergeCatalog({
+      catalog: first.catalog.products,
+      items: [{ ...item, description: "Short slogan!" }],
+    });
+    expect(second.catalog.products[0].description).toContain("Русское описание");
   });
 
   it("keeps a draft with the gate reasons as a note", () => {

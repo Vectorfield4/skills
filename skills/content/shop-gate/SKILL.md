@@ -10,7 +10,7 @@ One job: decide `publish` or `draft` from facts, not from mood.
 | Verdict | Question | Fails when |
 |---|---|---|
 | trust | Is the brand in `sellers.yaml`? | brand/domain unknown to us |
-| unique | Does the site already carry it? | same sku, same name, or 2 shared name tokens |
+| unique | Does the site already carry it? | same sku or same normalized name (siblings like B2 / B2-W are different robots) |
 | spec | Is there something to show? | no image, and no category and no description ≥ 80 chars |
 
 Price is absent on purpose: it is never published, so it cannot block.

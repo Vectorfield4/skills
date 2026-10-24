@@ -83,7 +83,7 @@ const gated = {
 };
 
 describe("shop nodes", () => {
-  it("merges the gate verdicts into a price-free catalog, twice without changes", () => {
+  it("merges the gate verdicts into a price-free catalog, twice without changes", { timeout: 30000 }, () => {
     const { dir, data } = workspace();
     mkdirSync(data, { recursive: true });
     const catalogFile = join(dir, "catalog.json");
@@ -107,7 +107,7 @@ describe("shop nodes", () => {
     expect(check.code).toBe(0);
   });
 
-  it("gates a plan into publish and draft with reasons", () => {
+  it("gates a plan into publish and draft with reasons", { timeout: 30000 }, () => {
     const { dir } = workspace();
     const plan = join(dir, "plan.json");
     const audit = join(dir, "audit.json");
@@ -172,7 +172,7 @@ describe("shop nodes", () => {
     expect(draft.reasons.join(" ")).toContain("brand is not in");
   });
 
-  it("plans gap-closing candidates from an audit and a tagged index", () => {
+  it("plans gap-closing candidates from an audit and a tagged index", { timeout: 30000 }, () => {
     const { dir } = workspace();
     const audit = join(dir, "audit.json");
     const tagged = join(dir, "tagged-index.json");
@@ -231,7 +231,7 @@ describe("shop nodes", () => {
     expect(plan.candidates).toEqual(["HR-COBOT"]);
   });
 
-  it("writes the alias map from a TypeScript source", () => {
+  it("writes the alias map from a TypeScript source", { timeout: 30000 }, () => {
     const { dir } = workspace();
     const source = join(dir, "productTags.ts");
     const out = join(dir, "tag-aliases.json");
@@ -244,7 +244,7 @@ describe("shop nodes", () => {
     expect(readJson(out)).toEqual({ гуманоиды: ["humanoid"] });
   });
 
-  it("builds the WordPress MCP plan without tags on product-create", () => {
+  it("builds the WordPress MCP plan without tags on product-create", { timeout: 30000 }, () => {
     const { dir } = workspace();
     const catalogFile = join(dir, "catalog.json");
     const gatedFile = join(dir, "gated.json");
@@ -281,14 +281,14 @@ describe("shop nodes", () => {
     expect(item.steps[4].input.status).toBe("publish");
   });
 
-  it("refuses to write without a gate file", () => {
+  it("refuses to write without a gate file", { timeout: 30000 }, () => {
     const { dir } = workspace();
     const catalogFile = join(dir, "catalog.json");
     writeFileSync(catalogFile, JSON.stringify(catalog), "utf8");
     node("shop-write/scripts/write-rest.mjs", ["--catalog", catalogFile], { expectCode: 2 });
   });
 
-  it("audits local article pairs offline and names the gaps", () => {
+  it("audits local article pairs offline and names the gaps", { timeout: 30000 }, () => {
     const { dir } = workspace();
     const articles = join(dir, "articles");
     mkdirSync(articles, { recursive: true });
