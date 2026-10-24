@@ -28,7 +28,7 @@ export function readRules(file) {
   const doc = readListDoc(file);
   if (!doc) throw new Error(`tag rules not found: ${file}`);
   return (doc.items ?? [])
-    .map((item) => ({ kind: item.kind, match: item.match, tags: item.tags }))
+    .map((item) => ({ kind: item.kind, match: item.match, tags: item.tags, robot: item.robot }))
     .filter((rule) => rule.kind && rule.match);
 }
 
