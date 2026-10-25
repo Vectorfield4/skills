@@ -1,6 +1,6 @@
 ---
 name: thematic-article-search
-description: "Search articles matching a site topic and return candidate links from RSS, Atom, and Hacker News. Triggers: thematic article search, search articles by topic, topic article candidates, article discovery, find articles on topic."
+description: "Step 1 (discovery, topic-filtered) of the news-article chain news-fetcher -> published-check -> article-extractor -> translate-article -> wp-publish, for a plain news site that keeps one articles/<slug>.<lang>.md per locale it ships. Same job as news-fetcher, but takes a required --topic (plus optional --lang/--country) and returns a capped, filtered candidate list instead of the whole feed dump. Search only: no bodies, no drafts, no storage. Triggers: thematic article search, search articles by topic, topic article candidates, article discovery, find articles on topic, find news for the site, свежие новости по теме, найти статьи по теме, добавить статьи."
 ---
 
 # Thematic article search
@@ -18,7 +18,7 @@ Do not hardcode sources. Pass a JSON file with sources. Format:
 ]
 ```
 
-Set `type` to `rss`, `atom`, or `hn`. Accept both a bare array and `{ "sources": [...] }`. Default `type` to `rss`. Sources may also carry optional `lang`, `country`, `weight` fields, copied onto each candidate.
+Set `type` to `rss`, `atom`, `hn`, `html-list` (newsroom index pages without a feed; `html-list` sources also take `selector` and `baseUrl`) or `json-list` (the same list read from a JSON endpoint; also takes `method`/`body`/`itemsPath`/`urlField`/`titleField`/`dateField`/`urlTemplate`/`baseUrl`), see the `news-fetcher` skill. Accept both a bare array and `{ "sources": [...] }`. Default `type` to `rss`. Sources may also carry optional `lang`, `country`, `weight` fields, copied onto each candidate.
 
 ## Run
 
@@ -54,4 +54,3 @@ Skip a dead feed with `[skip] <name>: <error>` on stderr.
 ## Validation
 
 - Run `npm test`.
-- Run `npm run doctor`.

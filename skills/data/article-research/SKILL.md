@@ -92,8 +92,23 @@ the pack.
 - Discovery is delegated to `source-discovery`; do not duplicate `websearch`.
 - Do not write a source spec.
 - One `source-discovery` call per run (may be repeated when necessary).
-- No script (`research.mjs`) ships with this skill; orchestration lives here.
+- A runnable entry point ships as `scripts/run.mjs` (see below). It automates
+  the mechanical steps (fetch/score/select/parse/write pack). LLM-only steps
+  (source discovery, rerank, translation) remain manual per this skill.
 
-## Validation
+## Run (mechanical)
 
-- Run `npm run doctor`.
+```bash
+node skills/data/article-research/scripts/run.mjs \
+  --topic "..." [--country <c>] [--lang <l>] \
+  (--sources sources.json | --candidates discovered.json) \
+  [--out docs/research/pack.json] [--limit 8] [--min-words 80]
+```
+
+- `--sources`: RSS/Atom/HN feed file (news-fetcher format) -> fetches candidates.
+- `--candidates`: JSON from `source-discovery` (array or `{ candidates }`).
+- Scores `weight * recencyFactor(date)`, selects top-`--limit`, parses selected
+  bodies via the fallback chain, writes the research pack.
+- LLM steps NOT automated: source discovery (`source-discovery`), rerank of
+  top-20, and translation of non-target-language titles/text. `translation`
+  stays `null` and `selected` is the score-based top-N unless reranked by hand.

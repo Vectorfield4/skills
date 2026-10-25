@@ -99,7 +99,3 @@ No `edit`, `bash`, or `task`. No file writes.
 - Do not write to storage or any file.
 - Do not reference orchestrators or other skills.
 - Do not invent URLs; every candidate must come from a real search/fetch.
-
-## Validation
-
-- Run `npm run doctor`.

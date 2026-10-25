@@ -1,6 +1,6 @@
 ---
 name: news-fetcher
-description: "Collects news candidate links from RSS/Atom feeds and Hacker News without API keys. Takes a source list you provide and returns deduplicated JSON (source, title, url, date). Use for discovery — deciding what to write about."
+description: "Step 1 (discovery) of the news-article chain news-fetcher -> published-check -> article-extractor -> translate-article -> wp-publish, which is the pipeline for a plain news site that keeps one articles/<slug>.<lang>.md per locale it ships (no content/plan, no generation queue, no cover gate). Collects news candidate links from RSS/Atom feeds and Hacker News without API keys. Takes a source list you provide (usually the project's scripts/sources.json) and returns deduplicated JSON (source, title, url, date). Triggers: news fetcher, add more articles, add new articles, new articles came out, find fresh news, latest news on a topic, candidates from feeds, собрать кандидатов, добавить статьи, свежие новости, что нового."
 ---
 
 # News Fetcher
@@ -8,7 +8,9 @@ description: "Collects news candidate links from RSS/Atom feeds and Hacker News 
 Discovery step of the article pipeline. Turns a list of feeds into one deduplicated
 JSON array of candidate links. Plain `fetch`, no API keys, no dependencies.
 
-Article bodies are a separate skill: `article-extractor`.
+Article bodies are a separate skill: `article-extractor`. End-to-end runs are
+owned by the `content-translate-related-articles` agent; run this skill alone only when the
+caller wants discovery and nothing else.
 
 ## Sources are data, not code
 

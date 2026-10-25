@@ -1,6 +1,6 @@
 ---
 name: spec-interviewer
-description: Use when the user wants to define or spec a new capability for a project's rewrite (a ticker-watch pipeline and friends). Interviews in batches, writes a spec draft to docs/capabilities/<name>.md. Trigger phrases: "spec a capability", "определить capability", "напиши спеку", "capability spec".
+description: Use when the user wants to define or spec a new capability for a project's rewrite (a ticker-watch pipeline and friends). Interviews one question at a time with reasoning between each, writes a spec draft to docs/capabilities/<name>.md. Trigger phrases: "spec a capability", "определить capability", "напиши спеку", "capability spec".
 ---
 
 # spec-interviewer
@@ -12,7 +12,7 @@ Reference: `docs/capabilities/ticker-watch.md`. Match its shape.
 ## Process
 
 1. Ask what the capability does in one sentence.
-2. Ask: what does the user get, what breaks without it, what is out of scope. Three questions, one batch.
+2. Ask one question at a time, with reasoning between each. Do not batch multiple questions into a single call. Use the question tool for each question individually.
 3. Propose input/output contract as a draft paragraph. Let user correct.
 4. Ask about data sources and storage: where data comes from, where it lives, static or dynamic.
 5. Ask about acceptance: how do we know it works. Do not invent metrics user did not mention.

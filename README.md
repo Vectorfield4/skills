@@ -95,24 +95,26 @@ second pass cheaper.
 
 ## News article pipeline
 
-A plain news site keeps only `articles/<slug>.ru.md` + `.en.md` pairs: no
-`content/plan/`, no generation queue, no cover gate, no `related*` entities.
-That site has one owner: the `content-translate-related-articles` agent
+A plain news site keeps only `articles/<slug>.<lang>.md` — one file per locale the
+site ships (`<slug>.ru.md` alone on a ru-only site, `<slug>.ru.md` + `<slug>.en.md`
+when the site serves both): no `content/plan/`, no generation queue, no cover gate,
+no `related*` entities. That site has one owner: the
+`content-translate-related-articles` agent
 (`agent/content/translate-related-articles.md`).
 
 Call it and name the step range — nothing else:
 
 > `content-translate-related-articles`: add two fresh robotics articles from
-> `scripts/sources.json`, RU + EN, verify and commit. Do not publish.
+> `scripts/sources.json`, target language ru, verify and commit. Do not publish.
 
 The agent runs the chain in order:
 
 | # | Skill | Job |
 |---|---|---|
 | 1 | `news-fetcher` (or `thematic-article-search --topic`) | candidates from the project's sources (`scripts/sources.json`, `docs/article-sources.md`) |
-| 2 | `candidates-triage`, then `published-check` | drop duplicates; skip a story whose pair and translation already exist |
+| 2 | `candidates-triage`, then `published-check` | drop duplicates; skip a story that already has a published article (plus its translations, when the site ships more than one locale) |
 | 3 | `article-extractor` (`try-parse-url` on failure) | the article body |
-| 4 | `translate-article` | the site-language article and its `.en.md` mirror |
+| 4 | `translate-article` | one file per locale the site ships — no mirror on a single-language site |
 | 5 | `product-match` (through `content-product-scout`) | products for the tags the article uses, images copied into the project, caption = model name; keeps `data/<host>/tags.yaml` fresh |
 | 6 | `wp-publish` -> `wp-record` -> `wp-sync-tags` | optional publish, then frontmatter write-back |
 

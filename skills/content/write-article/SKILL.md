@@ -1,6 +1,6 @@
 ---
 name: write-article
-description: Use when writing or publishing a news article for the blog (articles/<slug>.ru.md / .en.md) — picking a genre, assembling the spec, drafting RU and the EN mirror, wiring links and cover, and clearing the prose gates. Triggers: "WriteArticle", "write article", "news article", "написать статью", "новый разбор", "пост в новости", "материал по плану", and genre names: product, research, technical, case-study, corporate, industry, media, community.
+description: Use when writing or publishing an article inside the service-site content pipeline — a row from content/plan/, a record in content/generation-queue.json, a generated cover at assets/images/articles/<slug>.png (1200×630), relatedServices/relatedSolutions/relatedCases links and the prose-critic gate. Drafts articles/<slug>.ru.md with its .en.md mirror and publishes both with publish.mjs. Triggers: "WriteArticle", "write article for the content plan", "новый разбор", "пост в новости по контент-плану", "материал по плану", "статья по контент-плану", and genre names: product, research, technical, case-study, corporate, industry, media, community. Not for a plain news site that keeps one articles/<slug>.<lang>.md per locale it ships and has no content/plan, no generation queue, no cover gate and no related entities — there use news-fetcher (or thematic-article-search) -> published-check -> article-extractor -> translate-article, then wp-publish.
 ---
 
 # WriteArticle

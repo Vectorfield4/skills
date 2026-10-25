@@ -1,6 +1,6 @@
 ---
 name: article-extractor
-description: "Extracts clean article text from any URL using Mozilla Readability (no API keys). Use when you need the body of a web article for summarization or translation."
+description: "Step 3 (body) of the news-article chain news-fetcher -> published-check -> article-extractor -> translate-article -> wp-publish: extracts clean article text from any candidate URL using Mozilla Readability (no API keys). Use when you need the full body of a web article before summarizing, rewriting or translating it into articles/<slug>.ru.md. Triggers: article extractor, extract article, fetch article body, get article text, read the source article, извлечь статью, вытащить текст статьи, распарсить статью."
 ---
 
 # Article Extractor
@@ -9,6 +9,8 @@ Universal, key-free article text extraction. Mozilla Readability + jsdom, run fr
 `scripts/extract-article.mjs` in this skill.
 
 Candidate URLs come from the `news-fetcher` skill; this one fetches the body.
+End-to-end runs are owned by the `content-translate-related-articles` agent; run this skill
+alone only when the caller already has URLs and wants the text.
 
 ## When to use
 
