@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { parseFlags } from "../lib/cli.mjs";
+import { parseFlags, wantsHelp } from "../lib/cli.mjs";
+
+describe("wantsHelp", () => {
+  it("catches --help wherever it stands, because parseFlags would call it a typo", () => {
+    expect(wantsHelp(["--help"])).toBe(true);
+    expect(wantsHelp(["--region", "leningrad-oblast", "--help"])).toBe(true);
+    expect(wantsHelp(["--region", "leningrad-oblast"])).toBe(false);
+    expect(wantsHelp([])).toBe(false);
+  });
+});
 
 describe("parseFlags", () => {
   const spec = { apply: "boolean", name: "string", size: "number" };

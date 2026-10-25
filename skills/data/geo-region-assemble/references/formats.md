@@ -9,6 +9,7 @@ The dataset is one folder per region under `geo/<region>/`. A region has one fol
 geo/<region>/
   area.md
   authoritative-sources.json
+  districts.json
   index.geojson
   region.geojson
   boundaries.geojson
@@ -97,7 +98,43 @@ fields, `tags`, `water: null`, `sanpin_2_1_4_1175_02: null`, `flags: []`,
 
 FeatureCollection of MultiPolygons, one per district. `id` equals `district_slug`. Properties:
 `district`, `district_slug`, `district_type`, `admin_subject`, `osm_relation_id`,
-`osm_admin_level: 6`, `source`. Rings are closed. Inner rings are holes.
+`osm_admin_level`, `source`. Rings are closed. Inner rings are holes.
+
+`osm_admin_level` is the level of the OSM relation the boundary came from, not a setting:
+`6` for a district of the subject, `5` for a city district of a federal city (the districts of
+Санкт-Петербург inside `leningrad-oblast`). Both are valid, and the validator reads the value from
+the feature and rejects anything other than 5 or 6. A refresh writes the level from the relation it
+downloaded, so a city district never has to be relabelled to pass a check; ask for both levels with
+`--admin-level 6,5`.
+
+## `districts.json`
+
+Optional. A region folder may keep one file that maps every OSM name to a district slug, so a
+refresh does not depend on `index.geojson` existing yet:
+
+```
+geo/<region>/districts.json
+{
+  "region": "leningrad-oblast",
+  "admin_subject": "Ленинградская область",
+  "bbox": [59.6, 29.4, 60.3, 30.4],
+  "bbox_order": "south,west,north,east",
+  "districts": [
+    { "name": "Выборгский район", "slug": "vyborgsky", "type": "муниципальный район",
+      "subject": "Ленинградская область", "osm_relation_id": 1162550, "osm_admin_level": 6 },
+    { "name": "Курортный район", "slug": "kurortny", "type": "городской район",
+      "subject": "Санкт-Петербург", "osm_relation_id": 1115366, "osm_admin_level": 5,
+      "outside_region_area": true }
+  ]
+}
+```
+
+`fetch-boundaries.mjs --districts` accepts either this object or a bare array. It reads `name` /
+`slug` / `type` / `subject` (aliases `district`, `district_slug`, `district_type`, `admin_subject`)
+and ignores the rest, so the extra fields document the data instead of driving the script:
+`osm_relation_id` and `osm_admin_level` record what `boundaries.geojson` holds, `outside_region_area`
+marks a district that is not inside the region relation, and the collection `bbox` is the box
+`fetch-osm-springs.mjs --bbox` takes for those districts.
 
 ## `region.geojson`
 

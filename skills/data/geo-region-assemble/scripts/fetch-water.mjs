@@ -24,7 +24,7 @@ import {
   writeJson,
   relationPolygons,
 } from "#lib/geo.mjs";
-import { isEntryPoint, parseFlags } from "#lib/cli.mjs";
+import { isEntryPoint, parseFlags, wantsHelp } from "#lib/cli.mjs";
 
 const usage = `Usage:
   node scripts/fetch-water.mjs --region leningrad-oblast --area 176095
@@ -37,7 +37,8 @@ Flags:
   --min-area   minimum lake area in km2, default 1
   --tolerance  simplification tolerance in degrees, default 0.002
   --out        output path, default geo/<region>/water.geojson
-  --endpoint   Overpass endpoint, default https://overpass-api.de/api/interpreter`;
+  --endpoint   Overpass endpoint, default https://overpass-api.de/api/interpreter
+  --help       print this usage and exit`;
 
 const sampleRing = (ring, limit) => {
   if (ring.length <= limit) return ring;
@@ -70,6 +71,11 @@ const intersectsRegion = (polygons, districts) => {
 };
 
 const main = async () => {
+  if (wantsHelp(process.argv.slice(2))) {
+    process.stdout.write(`${usage}\n`);
+    return;
+  }
+
   const flags = parseFlags(process.argv.slice(2), {
     region: "string",
     area: "number",

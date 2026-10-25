@@ -1,3 +1,6 @@
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   assembleRings,
@@ -10,6 +13,7 @@ import {
   polygonAreaKm2,
   simplifyRing,
   wayToRing,
+  writeJson,
 } from "../lib/geo.mjs";
 
 const square = [
@@ -19,6 +23,23 @@ const square = [
   [0, 1],
   [0, 0],
 ];
+
+describe("geo lib file IO", () => {
+  it("writes one line by default and indents only when asked", () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "geo-lib-"));
+    try {
+      const compact = path.join(dir, "compact.json");
+      const pretty = path.join(dir, "nested", "pretty.json");
+      writeJson(compact, { a: 1 });
+      writeJson(pretty, { a: 1 }, { indent: 2 });
+
+      expect(readFileSync(compact, "utf8")).toBe('{"a":1}\n');
+      expect(readFileSync(pretty, "utf8")).toBe('{\n  "a": 1\n}\n');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
 
 describe("geo lib rings", () => {
   it("joins split segments into one closed ring", () => {

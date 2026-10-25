@@ -5,16 +5,22 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { bboxOfRing, readJson, today, writeJson } from "#lib/geo.mjs";
-import { isEntryPoint, parseFlags } from "#lib/cli.mjs";
+import { isEntryPoint, parseFlags, wantsHelp } from "#lib/cli.mjs";
 
 const usage = `Usage:
   node scripts/validate-region.mjs --region leningrad-oblast
 
 Flags:
   --region  geo folder name (required)
-  --out     write the JSON report to this file`;
+  --out     write the JSON report to this file
+  --help    print this usage and exit`;
 
 const DISTANCE = ["муниципальный район", "муниципальный округ", "городской район", "городской округ"];
+
+// A district of the subject sits at admin_level 6, a city district of a federal city
+// (Санкт-Петербург inside Ленинградская область) at 5. Both are real data, so both are
+// valid; the level is read from the feature and only its range is guarded.
+const ADMIN_LEVELS = [5, 6];
 
 const isFiniteNumber = (value) => typeof value === "number" && Number.isFinite(value);
 const isDate = (value) => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
@@ -44,6 +50,11 @@ const collectionBbox = (features) => {
 };
 
 const main = async () => {
+  if (wantsHelp(process.argv.slice(2))) {
+    process.stdout.write(`${usage}\n`);
+    return;
+  }
+
   const flags = parseFlags(process.argv.slice(2), { region: "string", out: "string" });
   if (!flags.region) throw new Error("--region is required");
 
@@ -298,9 +309,12 @@ const main = async () => {
     }
   }
 
+  const boundaryLevels = new Set();
+
   if (boundaries) {
     if (boundaries.count !== boundaries.features.length) error("boundaries.geojson: count mismatch");
-    if (!String(boundaries.license ?? "").includes("ODbL")) error("boundaries.geojson: license must mention ODbL");    const slugs = new Set();
+    if (!String(boundaries.license ?? "").includes("ODbL")) error("boundaries.geojson: license must mention ODbL");
+    const slugs = new Set();
     for (const feature of boundaries.features) {
       const props = feature.properties ?? {};
       const where = `boundaries.geojson ${props.district_slug ?? "<no slug>"}`;
@@ -308,7 +322,13 @@ const main = async () => {
       if (slugs.has(props.district_slug)) error(`${where}: duplicate district_slug`);
       slugs.add(props.district_slug);
       if (feature.id !== props.district_slug) warn(`${where}: feature.id differs from district_slug`);
-      if (props.osm_admin_level !== 6) error(`${where}: osm_admin_level must be 6`);
+      // Compare with the level the boundary actually carries, not with a constant:
+      // snapping a city district to 6 to satisfy the check would be a lie in the data.
+      if (!ADMIN_LEVELS.includes(props.osm_admin_level)) {
+        error(`${where}: osm_admin_level must be 5 or 6, got ${JSON.stringify(props.osm_admin_level)}`);
+      } else {
+        boundaryLevels.add(props.osm_admin_level);
+      }
       if (feature.geometry?.type !== "MultiPolygon") error(`${where}: geometry must be MultiPolygon`);
       for (const polygon of feature.geometry?.coordinates ?? []) {
         for (const ring of polygon) if (!ringIsClosed(ring)) error(`${where}: ring is not closed`);
@@ -393,6 +413,7 @@ const main = async () => {
       sea: Boolean(sea),
       osm_springs: Boolean(regionOsm),
       districts: indexSlugs.size,
+      admin_levels: [...boundaryLevels].sort((left, right) => left - right),
     },
   };
 

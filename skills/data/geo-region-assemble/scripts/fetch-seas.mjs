@@ -17,7 +17,7 @@ import {
   writeJson,
 } from "#lib/geo.mjs";
 import { fetchText } from "#lib/http.mjs";
-import { isEntryPoint, parseFlags } from "#lib/cli.mjs";
+import { isEntryPoint, parseFlags, wantsHelp } from "#lib/cli.mjs";
 
 const DEFAULT_URL =
   "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_ocean.geojson";
@@ -33,7 +33,8 @@ Flags:
   --url        ocean GeoJSON, default Natural Earth 1:10m
   --margin     degrees of padding around the region bbox, default 0.25
   --tolerance  simplification tolerance in degrees, default 0.002
-  --out        output path, default geo/<region>/sea.geojson`;
+  --out        output path, default geo/<region>/sea.geojson
+  --help       print this usage and exit`;
 
 /** Union bbox of every boundary feature in the region. */
 const unionBbox = (features) => {
@@ -54,6 +55,11 @@ const unionBbox = (features) => {
 const roundBbox = (bbox, digits = 4) => bbox.map((value) => Math.round(value * 10 ** digits) / 10 ** digits);
 
 const main = async () => {
+  if (wantsHelp(process.argv.slice(2))) {
+    process.stdout.write(`${usage}\n`);
+    return;
+  }
+
   const flags = parseFlags(process.argv.slice(2), {
     region: "string",
     url: "string",

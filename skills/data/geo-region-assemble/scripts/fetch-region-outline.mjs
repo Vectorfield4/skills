@@ -14,7 +14,7 @@ import {
   today,
   writeJson,
 } from "#lib/geo.mjs";
-import { isEntryPoint, parseFlags } from "#lib/cli.mjs";
+import { isEntryPoint, parseFlags, wantsHelp } from "#lib/cli.mjs";
 
 const usage = `Usage:
   node scripts/fetch-region-outline.mjs --region leningrad-oblast --area 176095
@@ -24,9 +24,15 @@ Flags:
   --area       OSM relation id of the region (required)
   --tolerance  simplification in degrees, default 0.002
   --out        default geo/<region>/region.geojson
-  --endpoint   Overpass endpoint, default the public list`;
+  --endpoint   Overpass endpoint, default the public list
+  --help       print this usage and exit`;
 
 const main = async () => {
+  if (wantsHelp(process.argv.slice(2))) {
+    process.stdout.write(`${usage}\n`);
+    return;
+  }
+
   const flags = parseFlags(process.argv.slice(2), {
     region: "string",
     area: "number",

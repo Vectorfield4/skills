@@ -14,18 +14,39 @@ import {
   today,
   writeJson,
 } from "#lib/geo.mjs";
-import { isEntryPoint, parseFlags } from "#lib/cli.mjs";
+import { isEntryPoint, parseFlags, wantsHelp } from "#lib/cli.mjs";
 
 const usage = `Usage:
   node scripts/fetch-osm-springs.mjs --region leningrad-oblast --area 176095
+  node scripts/fetch-osm-springs.mjs --region leningrad-oblast --area 176095 --bbox 59.6,29.4,60.3,30.4
 
 Flags:
   --region         geo folder name (required)
-  --area           OSM relation id of the region (required)
+  --area           OSM relation id of the region, required unless --bbox is set
+  --bbox           south,west,north,east. Adds an explicit box to the query for a territory that is
+                   not inside the region relation (city districts of a federal city sit in another
+                   subject). With --area the two filters are unioned, so a mixed region keeps both
+                   its own nodes and the extra ones. Districts are still split by boundaries.geojson
   --region-name    display name when index.geojson is missing
   --admin-subject  subject name for feature properties
   --out            region-level output, default geo/<region>/osm-springs.geojson
-  --endpoint       Overpass endpoint, default https://overpass-api.de/api/interpreter`;
+  --endpoint       Overpass endpoint, default https://overpass-api.de/api/interpreter
+  --help           print this usage and exit`;
+
+/** `south,west,north,east` in WGS84, the order Overpass wants. */
+const parseBbox = (value) => {
+  if (value === undefined) return null;
+  const numbers = String(value)
+    .split(",")
+    .map((item) => Number(item.trim()));
+  if (numbers.length !== 4 || numbers.some((item) => !Number.isFinite(item))) {
+    throw new Error("--bbox needs four numbers: south,west,north,east");
+  }
+  const [south, west, north, east] = numbers;
+  if (south >= north || west >= east) throw new Error("--bbox must satisfy south < north and west < east");
+  if (south < -90 || north > 90 || west < -180 || east > 180) throw new Error("--bbox falls outside WGS84 bounds");
+  return numbers;
+};
 
 const TAG_KEYS = [
   "drinking_water",
@@ -52,9 +73,15 @@ const pickTags = (tags) => {
 };
 
 const main = async () => {
+  if (wantsHelp(process.argv.slice(2))) {
+    process.stdout.write(`${usage}\n`);
+    return;
+  }
+
   const flags = parseFlags(process.argv.slice(2), {
     region: "string",
     area: "number",
+    bbox: "string",
     "region-name": "string",
     "admin-subject": "string",
     out: "string",
@@ -62,7 +89,8 @@ const main = async () => {
   });
 
   if (!flags.region) throw new Error("--region is required");
-  if (!flags.area) throw new Error("--area is required");
+  const bbox = parseBbox(flags.bbox);
+  if (!flags.area && !bbox) throw new Error("--area is required unless --bbox is set");
 
   const regionDir = path.join(process.cwd(), "geo", flags.region);
   const boundsFile = path.join(regionDir, "boundaries.geojson");
@@ -94,15 +122,24 @@ const main = async () => {
   });
   if (districts.length === 0) throw new Error("No district geometries in boundaries.geojson");
 
+  // A city district is not inside the oblast relation, so its nodes need an explicit box.
+  // With both flags the filters are unioned: `(area.a)` alone would miss the city, a box
+  // alone would drop every node outside it. Nodes still land in districts by boundaries.geojson.
+  const filters = [];
+  if (flags.area) filters.push("(area.a)");
+  if (bbox) filters.push(`(${bbox.join(",")})`);
+  const selectors = filters.flatMap((filter) => [
+    `  node["natural"="spring"]${filter};`,
+    `  node["waterway"="spring"]${filter};`,
+  ]);
   const query = `[out:json][timeout:300];
-area(${overpassAreaId(flags.area)})->.a;
-(
-  node["natural"="spring"](area.a);
-  node["waterway"="spring"](area.a);
+${flags.area ? `area(${overpassAreaId(flags.area)})->.a;\n` : ""}(
+${selectors.join("\n")}
 );
 out body;`;
 
-  process.stderr.write(`Requesting OSM springs for area ${flags.area}...\n`);
+  const where = [flags.area ? `area ${flags.area}` : null, bbox ? `bbox ${bbox.join(",")}` : null].filter(Boolean).join(" + ");
+  process.stderr.write(`Requesting OSM springs for ${where}...\n`);
   const payload = await overpass(query, { endpoint: flags.endpoint });
   const elements = payload.elements ?? [];
   const retrieved = (payload.osm3s?.timestamp_osm_base ?? today()).slice(0, 10);
@@ -195,7 +232,8 @@ out body;`;
 
   const report = {
     region: flags.region,
-    area: flags.area,
+    area: flags.area ?? null,
+    bbox: bbox ?? null,
     out: path.relative(process.cwd(), outFile),
     count: allFeatures.length,
     counts,

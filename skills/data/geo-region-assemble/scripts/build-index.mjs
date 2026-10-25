@@ -5,14 +5,15 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { bboxPolygon, readJson, round, today, writeJson } from "#lib/geo.mjs";
-import { isEntryPoint, parseFlags } from "#lib/cli.mjs";
+import { isEntryPoint, parseFlags, wantsHelp } from "#lib/cli.mjs";
 
 const usage = `Usage:
   node scripts/build-index.mjs --region leningrad-oblast
 
 Flags:
   --region  geo folder name (required)
-  --out     output path, default geo/<region>/index.geojson`;
+  --out     output path, default geo/<region>/index.geojson
+  --help    print this usage and exit`;
 
 const readFeatures = (file) => {
   const data = readJson(file);
@@ -33,6 +34,11 @@ const extentOf = (features) => {
 };
 
 const main = async () => {
+  if (wantsHelp(process.argv.slice(2))) {
+    process.stdout.write(`${usage}\n`);
+    return;
+  }
+
   const flags = parseFlags(process.argv.slice(2), { region: "string", out: "string" });
   if (!flags.region) throw new Error("--region is required");
 

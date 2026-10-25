@@ -1,7 +1,8 @@
 # Assembly pipeline
 
-Seven stages, fixed order. Every stage is a standalone script with `--help` unavailable, so read the
-usage block in the file when a flag is unclear.
+Seven stages, fixed order. `scripts/assemble.mjs` runs stages 1 to 7 in sequence and prints one JSON
+manifest; every stage is also a standalone script with its own `--help`, so read that or the usage
+block in the file when a flag is unclear.
 
 ## 1. Region outline
 
@@ -11,15 +12,19 @@ borders stay hidden.
 
 ## 2. Boundaries
 
-`scripts/fetch-boundaries.mjs` queries `rel["boundary"="administrative"]["admin_level"="6"]` inside
-the region area, assembles member ways into rings, assigns holes, and maps OSM names to district
-slugs.
+`scripts/fetch-boundaries.mjs` queries `rel["boundary"="administrative"]` inside the region area,
+assembles member ways into rings, assigns holes, and maps OSM names to district slugs. The level comes
+from `--admin-level`: `6` by default, `6,5` when the region also holds city districts of a federal
+city, because those relations sit at level 5 and a level-6-only query drops them silently. The level
+written to each feature is the level of its own relation.
 
-Input: region slug, OSM relation id. Mapping comes from the existing `index.geojson`; for a new
-region pass `--districts districts.json`.
+Input: region slug, OSM relation id, `--admin-level`. Mapping comes from the existing `index.geojson`;
+for a new region pass `--districts geo/<region>/districts.json`.
 
 Failure: an OSM district without a slug mapping stops the script before writing. Add the name to the
-mapping; do not invent a slug that later diverges from the folder name.
+mapping; do not invent a slug that later diverges from the folder name. A district that the current
+`boundaries.geojson` holds but the response does not also stops the run — the collection is replaced,
+so removing one is allowed only through `--allow-drop`.
 
 Output: `boundaries.geojson` with MultiPolygon features and ODbL attribution.
 
@@ -28,7 +33,10 @@ Output: `boundaries.geojson` with MultiPolygon features and ODbL attribution.
 `scripts/fetch-osm-springs.mjs` queries nodes tagged `natural=spring` and `waterway=spring`, places
 each node in a district by point in polygon, writes the region collection and one file per district.
 
-Input: region slug, OSM relation id. Requires `boundaries.geojson`.
+Input: region slug, OSM relation id, or `--bbox south,west,north,east` for a territory that is not
+inside the region relation. With both, the two filters are unioned, so a mixed region keeps the nodes
+of its own area and the ones in the box. The bbox changes only the query: the split by district still
+comes from `boundaries.geojson`, so the per-district files keep the same shape.
 
 Failure: nodes outside every boundary are counted in `skipped_outside_boundaries` and dropped. A
 large number means the boundary layer is incomplete. Fix boundaries, do not widen the polygons by
@@ -106,5 +114,6 @@ it is an empty FeatureCollection.
 ## Agent run
 
 The `data-geo-assembler` agent receives project path, region, area id, optional districts mapping and
-the stage list. It runs the stages sequentially, stops on the first non-zero exit, and returns a JSON
-report with per-stage status and counts. It does not edit prose and does not commit.
+the stage list. It runs `assemble.mjs` (or the stages one by one), stops on the first non-zero exit,
+and returns the manifest: per-stage status, duration and counts. It does not edit prose and does not
+commit.
