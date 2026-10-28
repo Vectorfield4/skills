@@ -4,11 +4,11 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { readJson } from "#lib/shop/stable.mjs";
+import { readJson } from "#lib/sales/stable.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
-const SCRIPTS = join(ROOT, "skills", "content");
+const SCRIPTS = join(ROOT, "skills", "sales");
 
 function node(script, args, { expectCode = 0 } = {}) {
   try {
@@ -91,16 +91,16 @@ describe("shop nodes", () => {
     writeFileSync(catalogFile, JSON.stringify(catalog), "utf8");
     writeFileSync(gatedFile, JSON.stringify(gated), "utf8");
 
-    node("shop-catalog/scripts/merge.mjs", ["--catalog", catalogFile, "--gated", gatedFile]);
+    node("sales-catalog/scripts/merge.mjs", ["--catalog", catalogFile, "--gated", gatedFile]);
     const first = readJson(catalogFile);
     expect(first.products.map((product) => product.sku)).toEqual(["HR-NEW1", "HR-NEW2", "HR-OLD"]);
     expect(JSON.stringify(first)).not.toContain('"price"');
 
-    node("shop-catalog/scripts/merge.mjs", ["--catalog", catalogFile, "--gated", gatedFile]);
+    node("sales-catalog/scripts/merge.mjs", ["--catalog", catalogFile, "--gated", gatedFile]);
     expect(JSON.stringify(readJson(catalogFile))).toBe(JSON.stringify(first));
 
     const check = node(
-      "shop-catalog/scripts/merge.mjs",
+      "sales-catalog/scripts/merge.mjs",
       ["--catalog", catalogFile, "--gated", gatedFile, "--check"],
       { expectCode: 0 },
     );
@@ -155,7 +155,7 @@ describe("shop nodes", () => {
       "utf8",
     );
 
-    node("shop-gate/scripts/gate.mjs", [
+    node("sales-gate/scripts/gate.mjs", [
       "all",
       "--plan",
       plan,
@@ -215,7 +215,7 @@ describe("shop nodes", () => {
       "utf8",
     );
 
-    node("shop-plan/scripts/plan.mjs", [
+    node("sales-plan/scripts/plan.mjs", [
       "--audit",
       audit,
       "--tagged",
@@ -240,7 +240,7 @@ describe("shop nodes", () => {
       'export const TAG_ALIASES: Record<string, string[]> = {\n  гуманоиды: ["humanoid"],\n};\n',
       "utf8",
     );
-    node("product-match/scripts/aliases.mjs", ["--source", source, "--out", out]);
+    node("../content/product-match/scripts/aliases.mjs", ["--source", source, "--out", out]);
     expect(readJson(out)).toEqual({ гуманоиды: ["humanoid"] });
   });
 
@@ -264,7 +264,7 @@ describe("shop nodes", () => {
       "utf8",
     );
 
-    node("shop-write/scripts/write-wp-payload.mjs", [
+    node("sales-write/scripts/write-wp-payload.mjs", [
       "--catalog",
       catalogFile,
       "--gated",
@@ -285,7 +285,7 @@ describe("shop nodes", () => {
     const { dir } = workspace();
     const catalogFile = join(dir, "catalog.json");
     writeFileSync(catalogFile, JSON.stringify(catalog), "utf8");
-    node("shop-write/scripts/write-rest.mjs", ["--catalog", catalogFile], { expectCode: 2 });
+    node("sales-write/scripts/write-rest.mjs", ["--catalog", catalogFile], { expectCode: 2 });
   });
 
   it("audits local article pairs offline and names the gaps", { timeout: 30000 }, () => {
@@ -301,7 +301,7 @@ describe("shop nodes", () => {
     writeFileSync(catalogFile, JSON.stringify(catalog), "utf8");
     const out = join(dir, "audit.json");
 
-    node("shop-audit/scripts/audit.mjs", [
+    node("sales-audit/scripts/audit.mjs", [
       "--offline",
       "--articles",
       articles,

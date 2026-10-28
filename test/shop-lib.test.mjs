@@ -1,20 +1,21 @@
 import { describe, expect, it } from "vitest";
 
-import { readAliasesFile, parseAliasesSource, stripComments } from "#lib/shop/aliases.mjs";
-import { auditTags, buildAudit, coverageFor } from "#lib/shop/audit.mjs";
-import { catalogEntry, mergeCatalog, stripPriceFields } from "#lib/shop/catalog.mjs";
-import { gateProduct, specVerdict, uniqueVerdict } from "#lib/shop/gates.mjs";
-import { makeSku, parseSitemap, productFromHtml, productUrls } from "#lib/shop/harvest.mjs";
-import { parseListDoc, stringifyListDoc } from "#lib/shop/narrow-yaml.mjs";
-import { buildWcPayload, buildWpCreateInput, validatePayload } from "#lib/shop/payload.mjs";
-import { buildPlan, plannedCandidates, premiumScores } from "#lib/shop/plan.mjs";
-import { normalizeSellers, findSeller } from "#lib/shop/sellers.mjs";
-import { hashValue, slugify, stableStringify } from "#lib/shop/stable.mjs";
-import { tagIndex } from "#lib/shop/tagmap.mjs";
-import { upsertPrices } from "#lib/shop/ledger.mjs";
-import { verifyStore } from "#lib/shop/verify.mjs";
-import { diffRuns, summarize } from "#lib/shop/report.mjs";
-import { reuseNode, recordNode } from "#lib/shop/manifest.mjs";
+import { readAliasesFile, parseAliasesSource, stripComments } from "#lib/sales/aliases.mjs";
+import { auditTags, buildAudit, coverageFor } from "#lib/sales/audit.mjs";
+import { catalogEntry, mergeCatalog, stripPriceFields } from "#lib/sales/catalog.mjs";
+import { gateProduct, specVerdict, uniqueVerdict } from "#lib/sales/gates.mjs";
+import { makeSku, parseSitemap, productFromHtml, productUrls } from "#lib/sales/harvest.mjs";
+import { parseListDoc, stringifyListDoc } from "#lib/sales/narrow-yaml.mjs";
+import { buildWcPayload, buildWpCreateInput, validatePayload } from "#lib/sales/payload.mjs";
+import { buildPlan, plannedCandidates, premiumScores } from "#lib/sales/plan.mjs";
+import { normalizeSellers, findSeller } from "#lib/sales/sellers.mjs";
+import { hashValue, slugify, stableStringify } from "#lib/sales/stable.mjs";
+import { tagIndex } from "#lib/sales/tagmap.mjs";
+import { upsertPrices } from "#lib/sales/ledger.mjs";
+import { verifyStore } from "#lib/sales/verify.mjs";
+import { diffRuns, summarize } from "#lib/sales/report.mjs";
+import { reuseNode, recordNode } from "#lib/sales/manifest.mjs";
+import { productTextUnits, fallbackFindings } from "#lib/sales/translation.mjs";
 
 const ALIASES = { гуманоиды: ["humanoid", "humanoids"], навиг: ["navigation"] };
 
@@ -447,5 +448,34 @@ describe("verify", () => {
     expect(result.rows.find((row) => row.sku === "A")?.ok).toBe(true);
     expect(result.rows.find((row) => row.sku === "B")?.ok).toBe(false);
     expect(result.ok).toBe(false);
+  });
+});
+
+describe("translation gate", () => {
+  it("collects rendered text fields as units", () => {
+    const units = productTextUnits([
+      { sku: "X", name: "Hello world here", short_description: "Short desc text", description: "Long enough description text here" },
+    ]);
+    expect(units.map((u) => u.field)).toEqual(["name", "short_description", "description"]);
+  });
+
+  it("skips short fields", () => {
+    const units = productTextUnits([{ sku: "X", name: "Hi", short_description: "", description: "a b" }]);
+    expect(units).toHaveLength(0);
+  });
+
+  it("fallback flags a long Latin paragraph without Cyrillic", () => {
+    const findings = fallbackFindings([
+      { sku: "X", description: "This is a long untranslated english paragraph with many words here" },
+    ]);
+    expect(findings).toHaveLength(1);
+    expect(findings[0].rule).toBe("UNTRANSLATED_TEXT_FALLBACK");
+  });
+
+  it("fallback ignores Cyrillic and short text", () => {
+    expect(fallbackFindings([{ sku: "X", description: "короткий текст" }])).toHaveLength(0);
+    expect(
+      fallbackFindings([{ sku: "X", description: "Hello world это русский текст с латиницей" }]),
+    ).toHaveLength(0);
   });
 });

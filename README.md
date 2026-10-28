@@ -10,7 +10,7 @@ copy.
 ```
 agent/          subagent definitions (prose-critic, art-agent, ...)
 skills/         SKILL.md + optional scripts/ per skill, grouped by domain
-lib/            shared engine: http, cli, env, article-search and wp helpers, generation-queue, jev/ (gates), prose/ (rubrics)
+lib/            shared engine: http, cli, env, article-search and wp helpers, generation-queue, jev/ (gates), prose/ (rubrics), yaml/ (reader + TS contract parser), content/ (domain contracts)
 test/           vitest tests for that shared code
 ```
 
@@ -61,36 +61,36 @@ Skills that ship scripts: `article-extractor`, `news-fetcher`,
 `generate-favicon`, `generate-logo`, `project-init`, `write-article`,
 `write-service`, `write-solution`, `code-quality`, `doctor`, `release`,
 `geo-source-search`, `geo-region-assemble`, `geo-domain-lib`, `product-match`,
-`shop-audit`, `shop-vendors`, `shop-harvest`, `shop-price-ledger`, `shop-tagmap`,
-`shop-plan`, `shop-gate`, `shop-catalog`, `shop-write`, `shop-verify`,
-`shop-report`.
+`sales-audit`, `sales-vendors`, `sales-harvest`, `sales-price-ledger`, `sales-tagmap`,
+`sales-plan`, `sales-gate`, `sales-catalog`, `sales-write`, `sales-verify`,
+`sales-report`, `precedent-interview`, `extract-types-to-lib-domain`.
 
 ## Shop pipeline
 
 The shop is a deterministic tree: every node is one skill script — flags in,
 stable JSON out, exit `0/1/2`, no knowledge of its caller. That is what lets
-`content-shop-filler` fan the nodes out to subagents.
+`content-sales-filler` fan the nodes out to subagents.
 
 | Node | Skill script | Output |
 |---|---|---|
-| capabilities | `shop-write/scripts/capabilities.mjs` | `data/<host>/transport.json` |
-| vendors | `shop-vendors/scripts/vendors.mjs` | `data/<host>/sellers.yaml` |
+| capabilities | `sales-write/scripts/capabilities.mjs` | `data/<host>/transport.json` |
+| vendors | `sales-vendors/scripts/vendors.mjs` | `data/<host>/sellers.yaml` |
 | aliases | `product-match/scripts/aliases.mjs` | `data/<host>/tag-aliases.json` |
-| audit | `shop-audit/scripts/audit.mjs` | `data/<host>/audit.json` |
-| harvest | `shop-harvest/scripts/harvest.mjs` | `data/<host>/index/*.json` |
-| ledger | `shop-price-ledger/scripts/ledger.mjs` | `data/<host>/prices.yaml` |
-| tagmap | `shop-tagmap/scripts/tagmap.mjs` | `data/<host>/tagged-index.json` |
-| plan | `shop-plan/scripts/plan.mjs` | `data/<host>/plan.json` |
-| gate | `shop-gate/scripts/gate.mjs` | `data/<host>/gated.json` |
-| catalog | `shop-catalog/scripts/merge.mjs` | `products/catalog.json` |
-| write | `shop-write/scripts/write-rest.mjs` \| `write-wp-payload.mjs` | WooCommerce |
-| verify | `shop-verify/scripts/verify.mjs` | `data/<host>/verify-*.json` |
-| report | `shop-report/scripts/report.mjs` | `data/<host>/runs/<stamp>/summary.json` |
+| audit | `sales-audit/scripts/audit.mjs` | `data/<host>/audit.json` |
+| harvest | `sales-harvest/scripts/harvest.mjs` | `data/<host>/index/*.json` |
+| ledger | `sales-price-ledger/scripts/ledger.mjs` | `data/<host>/prices.yaml` |
+| tagmap | `sales-tagmap/scripts/tagmap.mjs` | `data/<host>/tagged-index.json` |
+| plan | `sales-plan/scripts/plan.mjs` | `data/<host>/plan.json` |
+| gate | `sales-gate/scripts/gate.mjs` | `data/<host>/gated.json` |
+| catalog | `sales-catalog/scripts/merge.mjs` | `products/catalog.json` |
+| write | `sales-write/scripts/write-rest.mjs` \| `write-wp-payload.mjs` | WooCommerce |
+| verify | `sales-verify/scripts/verify.mjs` | `data/<host>/verify-*.json` |
+| report | `sales-report/scripts/report.mjs` | `data/<host>/runs/<stamp>/summary.json` |
 
 Three invariants hold across the tree: a product enters only with a tag the blog
 uses; the brand allowlist is internal scoring; a price never leaves
 `data/<host>/prices.yaml`. The project's `/add-products` command raises
-`content-shop-filler`; `content-shop-optimizer` measures the run and makes the
+`content-sales-filler`; `content-sales-optimizer` measures the run and makes the
 second pass cheaper.
 
 ## News article pipeline
