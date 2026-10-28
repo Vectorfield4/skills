@@ -7,21 +7,23 @@
 //
 //   node scripts/harvest.mjs --domain unitree.com [--max-urls 40]
 //   node scripts/harvest.mjs --sellers data/<host>/sellers.yaml [--max-brands 4] [--ttl-days 7]
+//   node scripts/harvest.mjs --domain hiwonder.com --feed-file feed.json
 //
 // Exit 0 — at least one product harvested (or index still fresh), 1 — nothing
 // found, 2 — workflow error.
 
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { isEntryPoint } from "#lib/cli.mjs";
 import { parseShop, runNode } from "#lib/shop/cli.mjs";
-import { harvestDomain } from "#lib/shop/harvest.mjs";
+import { harvestDomain, harvestFeed } from "#lib/shop/harvest.mjs";
 import { readSellersDoc } from "#lib/shop/sellers.mjs";
 import { readJsonSafe, writeJson } from "#lib/shop/stable.mjs";
 
 const USAGE = `Usage:
   harvest.mjs --domain unitree.com [--max-urls 40]
-  harvest.mjs --sellers data/<host>/sellers.yaml [--max-brands 4] [--ttl-days 7]`;
+  harvest.mjs --sellers data/<host>/sellers.yaml [--max-brands 4] [--ttl-days 7]
+  harvest.mjs --domain hiwonder.com --feed-file feed.json`;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -32,11 +34,16 @@ function fresh(file, ttlDays) {
   return Number.isFinite(age) && age >= 0 && age < ttlDays * DAY_MS;
 }
 
+function indexFile(indexDir, domain) {
+  return join(indexDir, `${domain.replace(/[^\p{L}\p{N}._-]+/gu, "-")}.json`);
+}
+
 export async function run(argv = process.argv.slice(2)) {
   return runNode(async () => {
     const { flags, dir } = parseShop(argv, {
       domain: "string",
       sellers: "string",
+      "feed-file": "string",
       "max-brands": "number",
       "max-urls": "number",
       "ttl-days": "number",
@@ -48,6 +55,19 @@ export async function run(argv = process.argv.slice(2)) {
     const maxUrls = Number(flags["max-urls"] ?? 40);
     const maxBrands = Number(flags["max-brands"] ?? 4);
     const delayMs = Number(flags["delay-ms"] ?? 0);
+
+    // A saved Shopify `/products.json` feed: same facts, transport done outside.
+    if (flags["feed-file"]) {
+      if (!flags.domain) {
+        console.error(USAGE);
+        return 2;
+      }
+      const file = indexFile(indexDir, flags.domain);
+      const result = harvestFeed(readFileSync(flags["feed-file"], "utf8"), flags.domain);
+      writeJson(file, result);
+      console.log(`${result.domain}: ${result.products.length} моделей (feed) → ${file}`);
+      return result.products.length > 0 ? 0 : 1;
+    }
 
     let domains = [];
     if (flags.domain) domains = [flags.domain];
@@ -62,7 +82,7 @@ export async function run(argv = process.argv.slice(2)) {
 
     const plan = [];
     for (const domain of [...new Set(domains)].sort()) {
-      const file = join(indexDir, `${domain.replace(/[^\p{L}\p{N}._-]+/gu, "-")}.json`);
+      const file = indexFile(indexDir, domain);
       if (!flags.domain && fresh(file, ttlDays)) {
         plan.push({ domain, status: "fresh", file });
         continue;
@@ -77,6 +97,20 @@ export async function run(argv = process.argv.slice(2)) {
         limit: maxUrls,
         delayMs,
       });
+      // A blocked origin is not evidence the catalogue is empty: keep the index
+      // we already have instead of overwriting it with zero models.
+      const previous = readJsonSafe(item.file, null);
+      if (
+        result.products.length === 0 &&
+        Array.isArray(previous?.products) &&
+        previous.products.length > 0
+      ) {
+        console.log(
+          `${item.domain}: источник не ответил, прежний индекс сохранён (${previous.products.length} моделей) → ${item.file}`,
+        );
+        for (const warning of result.warnings.slice(0, 3)) console.log(`  ! ${warning}`);
+        continue;
+      }
       writeJson(item.file, result);
       console.log(
         `${item.domain}: ${result.products.length} моделей, ${result.warnings.length} предупреждений → ${item.file}`,
