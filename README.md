@@ -117,10 +117,13 @@ The health check of the mounts runs as a skill:
 ```
 node skills/devops/doctor/scripts/doctor.mjs
 node skills/devops/doctor/scripts/doctor.mjs <project>
+node skills/devops/doctor/scripts/doctor.mjs --sync [<project>]
 ```
 
-It reads only. With a project path it also fails on `.opencode` leftovers, a
-drifted version-script copy, and engine files that moved into skills.
+It reads only, except under `--sync`. With a project path it also fails on
+`.opencode` leftovers, a drifted version-script copy, and engine files that moved
+into skills. With `--sync` it commits the working tree, rebases onto `origin`,
+runs `npm test`, and pushes when all of that passed.
 
 The Jev engine and the prose rubrics are part of this repo (`lib/jev`,
 `lib/prose`) and skill scripts reach them through `#lib/*`, so nothing needs
