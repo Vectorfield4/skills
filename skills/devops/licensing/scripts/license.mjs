@@ -18,12 +18,7 @@ import { fileURLToPath } from "node:url";
 import { isEntryPoint, printJson, runUtility } from "#lib/cli.mjs";
 
 const SKILL_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const DEFAULT_MAIN_LICENSE = join(
-  SKILL_DIR,
-  "references",
-  "vectorfield4-main-license.txt",
-);
-const DEFAULT_SUBLICENSE = join(SKILL_DIR, "references", "login-ai-license.txt");
+const DEFAULT_LICENSE = join(SKILL_DIR, "references", "login-ai-license.txt");
 const CONFIG_NAME = ".login-ai-license.json";
 
 const TEXT_EXTENSIONS = new Set([
@@ -58,9 +53,8 @@ const DEFAULTS = {
   },
   copyright: "© 2026 Login AI",
   mainLicenseName: "Vectorfield4 Main License",
-  mainLicenseFile: "LICENSE",
   licenseName: "Login AI License",
-  licenseFile: "LICENSE-LOGIN-AI",
+  licenseFile: "LICENSE",
   copyrightFile: "COPYRIGHT",
   packageLicense: "Login AI",
   licenseContains: [
@@ -94,7 +88,6 @@ const DEFAULTS = {
     "package-lock.json",
     CONFIG_NAME,
     "LICENSE",
-    "LICENSE-LOGIN-AI",
     "COPYRIGHT",
   ],
 };
@@ -186,13 +179,10 @@ function updateDataset(projectRoot, config) {
   return config.dataset;
 }
 
-function applyLicense(projectRoot, config, mainLicenseText, sublicenseText) {
+function applyLicense(projectRoot, config, licenseText) {
   const applied = [];
 
-  writeText(join(projectRoot, config.mainLicenseFile), mainLicenseText);
-  applied.push(config.mainLicenseFile);
-
-  writeText(join(projectRoot, config.licenseFile), sublicenseText);
+  writeText(join(projectRoot, config.licenseFile), licenseText);
   applied.push(config.licenseFile);
 
   if (config.copyrightFile) {
@@ -275,18 +265,6 @@ function checkDataset(projectRoot, config, errors) {
 function scan(projectRoot, config) {
   const errors = [];
   const warnings = [];
-
-  const mainLicensePath = join(projectRoot, config.mainLicenseFile);
-  if (!existsSync(mainLicensePath)) {
-    errors.push(`${config.mainLicenseFile} is missing`);
-  } else {
-    const license = readFileSync(mainLicensePath, "utf8");
-    if (!license.includes(config.mainLicenseName)) {
-      errors.push(
-        `${config.mainLicenseFile} does not contain "${config.mainLicenseName}"`,
-      );
-    }
-  }
 
   const licensePath = join(projectRoot, config.licenseFile);
   if (!existsSync(licensePath)) {
@@ -379,13 +357,12 @@ function scan(projectRoot, config) {
 const usage = [
   "Usage:",
   "  node scripts/license.mjs <project> --check",
-  "  node scripts/license.mjs <project> --apply [--config <path>]",
+  "  node scripts/license.mjs <project> --apply [--config <path>] [--license <path>]",
   "",
   "Options:",
-  "  --apply             write LICENSE, LICENSE-LOGIN-AI, COPYRIGHT, package and dataset metadata",
+  "  --apply             write LICENSE, COPYRIGHT, package and dataset metadata",
   "  --check             audit only, the default",
   "  --config <path>     project config, defaults to .login-ai-license.json",
-  "  --main-license <path>  Vectorfield4 main license for this run",
   "  --license <path>    Login AI sublicense text for this run",
 ];
 
@@ -397,7 +374,6 @@ if (isEntryPoint(import.meta.url)) {
       check: "boolean",
       config: "string",
       license: "string",
-      "main-license": "string",
     },
     allowEmpty: true,
     main: async (flags) => {
@@ -407,17 +383,12 @@ if (isEntryPoint(import.meta.url)) {
       }
 
       const config = loadConfig(projectRoot, flags.config);
-      const mainLicenseText = readLicense(
-        flags["main-license"]
-          ? resolve(projectRoot, flags["main-license"])
-          : DEFAULT_MAIN_LICENSE,
-      );
       const sublicenseText = readLicense(
-        flags.license ? resolve(projectRoot, flags.license) : DEFAULT_SUBLICENSE,
+        flags.license ? resolve(projectRoot, flags.license) : DEFAULT_LICENSE,
       );
 
       const applied = flags.apply
-        ? applyLicense(projectRoot, config, mainLicenseText, sublicenseText)
+        ? applyLicense(projectRoot, config, sublicenseText)
         : [];
 
       const report = scan(projectRoot, config);

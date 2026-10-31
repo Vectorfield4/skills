@@ -36,9 +36,8 @@ node scripts/license.mjs <project> --apply
 ```
 
 - `--check` is the default. It prints one JSON manifest and exits 1 on errors.
-- `--apply` writes the main license, the sublicense, `COPYRIGHT`, the package
-  author and license fields, and the dataset source metadata. Then it runs the
-  same checks.
+- `--apply` writes `LICENSE`, `COPYRIGHT`, the package author and license fields,
+  and the dataset source metadata. Then it runs the same checks.
 - `--config <path>` reads an explicit project config.
 - `--license <path>` overrides the sublicense text for one run.
 
@@ -61,8 +60,9 @@ node scripts/license.mjs <project> --apply
 
 ## License hierarchy
 
-- `LICENSE` holds the Vectorfield4 Main License.
-- `LICENSE-LOGIN-AI` holds the Login AI Sublicense.
+- `LICENSE` holds the Login AI Sublicense. Its text states that it is a
+  sublicense of the Vectorfield4 Main License.
+- Do not create a second license file. One `LICENSE` per project is enough.
 - `COPYRIGHT` holds `© 2026 Login AI`.
 - `package.json` sets `license` to `Login AI` unless the field already names
   Vectorfield4 or Login AI. In that case the existing value stays.
@@ -72,7 +72,8 @@ node scripts/license.mjs <project> --apply
   records `license: "Login AI License"` plus
   `mainLicense: "Vectorfield4 Main License"`.
 
-Do not rewrite Vectorfield4 to Login AI. Do not replace the main license.
+Do not rewrite Vectorfield4 to Login AI. Do not add a separate main licence
+file.
 
 ## Dataset rules
 
@@ -89,9 +90,8 @@ Do not rewrite Vectorfield4 to Login AI. Do not replace the main license.
 ## Validation
 
 - `node scripts/license.mjs <project> --check` exits 0.
-- `LICENSE` contains the Vectorfield4 Main License.
-- `LICENSE-LOGIN-AI` contains the Login AI Sublicense, both contacts and the AI
-  and commercial-use restrictions.
+- `LICENSE` contains the Login AI Sublicense, the Vectorfield4 Main License
+  reference, both contacts and the AI and commercial-use restrictions.
 - `package.json` uses `license: "Login AI"` unless Vectorfield4 or Login AI is
   already present, and carries the configured author object.
 - No forbidden string remains in the configured include paths.

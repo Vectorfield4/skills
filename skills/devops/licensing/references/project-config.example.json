@@ -3,8 +3,7 @@
   "owner": "Vectorfield4",
   "copyright": "© 2026 Login AI",
   "mainLicenseName": "Vectorfield4 Main License",
-  "mainLicenseFile": "LICENSE",
-  "licenseFile": "LICENSE-LOGIN-AI",
+  "licenseFile": "LICENSE",
   "copyrightFile": "COPYRIGHT",
   "packageLicense": "Login AI",
   "author": {
@@ -53,7 +52,6 @@
     "package-lock.json",
     ".login-ai-license.json",
     "LICENSE",
-    "LICENSE-LOGIN-AI",
     "COPYRIGHT"
   ]
 }
