@@ -18,7 +18,7 @@ Use `orchestrate-task` instead when the work is a project feature that needs a b
 ## Rules
 
 1. **Independence first.** Tasks must not depend on each other's output and must not touch the same files. If they share state, run them sequentially.
-2. **One pass.** Compose all sibling launches in a single generation: multiple `subagent` calls in one turn, or one `runs.all([...])`. Do not launch siblings across separate turns.
+2. **One pass.** Compose all sibling launches in a single generation: multiple `subagent` calls in one turn, or one `runs.all([...])`. Do not launch siblings across separate turns. The pass has no size limit: the task list decides it, not the skill.
 3. **No polling.** Results arrive as `<subagent_notification>`. Do not call `subagent_wait` or `status` in a loop. Use a single diagnostic `status` only if a notification is missing.
 4. **Fail isolation.** One sibling failing does not block the others. Report per-task status.
 5. **No shared writes.** Parallel code edits must target disjoint paths to avoid commit races.
@@ -67,11 +67,12 @@ Plus a short "Next" section: what to do with the results (merge, follow-up tasks
 - Do not create branches or worktrees.
 - Do not push. Workers may commit locally only if paths are disjoint.
 - Do not run quality loops here (that is orchestrate-task's job).
-- Keep the fan-out budget reasonable (≤ 8 siblings per pass; split into waves if more).
+- No cap on the number of siblings. The skill sets no budget and no wave size, the caller decides how many tasks the run needs. Launch every one of them in the single pass.
+- A platform rejection is the only reason to split. If a launch fails for reasons outside the task, retry just the rejected siblings as a second wave and say in the report which ones moved.
 
 ## Verification
 
-- All siblings launched in a single pass.
+- Every sibling in the task list launched in a single pass, with no cap applied by this skill.
 - No two siblings share a write target.
 - Every sibling's result recorded before reporting.
 - Failures reported, not swallowed.

@@ -1,6 +1,6 @@
 ---
 name: wp-publish
-description: "Step 5 (optional publish) of the news-article chain news-fetcher -> published-check -> article-extractor -> translate-article -> wp-publish: sends a finished article to WordPress as a post from a local JSON built out of articles/<slug>.ru.md, after which wp-record writes wp_id/wp_url back into the frontmatter. Writes one article to a WordPress REST API. The caller supplies a site config that names the host and can point at environment variables for credentials. Supports basic and bearer auth and a dry run. Triggers: wp-publish, wordpress-publish, WordPress publish, publish article to WordPress, publish the article, WP publish, push article to WordPress, create WordPress post, загрузить статью в WordPress, опубликовать статью."
+description: "Step 5 (optional publish) of the news-article chain news-fetcher -> published-check -> article-extractor -> translate-article -> wp-publish: sends a finished article to WordPress as a post from a local JSON built out of articles/<slug>.ru.md, after which wp-record writes wp_id/wp_url back into the frontmatter. Writes one article to a WordPress REST API. The caller supplies a site config that names the host and can point at environment variables for credentials. Supports basic and bearer auth and a dry run. Triggers: wp-publish, wordpress-publish, WordPress publish, publish article to WordPress, publish the article, WP publish, push article to WordPress, create WordPress post, Р·Р°РіСЂСѓР·РёС‚СЊ СЃС‚Р°С‚СЊСЋ РІ WordPress, РѕРїСѓР±Р»РёРєРѕРІР°С‚СЊ СЃС‚Р°С‚СЊСЋ."
 ---
 
 # WordPress publish
@@ -86,14 +86,14 @@ half is owned by the `product-match` skill and its `content-product-scout` agent
 call the agent before the first real publish, or run the scripts yourself:
 
 ```bash
-node "$env:USERPROFILE/.config/opencode/skills/content/product-match/scripts/tags.mjs" \
+node "~/.config/opencode/skills/content/product-match/scripts/tags.mjs" \
   status --file data/<host>/tags.yaml
-node "$env:USERPROFILE/.config/opencode/skills/content/product-match/scripts/match.mjs" \
+node "~/.config/opencode/skills/content/product-match/scripts/match.mjs" \
   --article articles/<slug>.ru.md --registry data/<host>/tags.yaml \
   --store https://<host> --copy-images --out docs/research/product-match-<slug>.json
 ```
 
-`tags.mjs status` exits `0` when the registry is under four hours old — then the
+`tags.mjs status` exits `0` when the registry is under four hours old вЂ” then the
 post's tags come from `data/<host>/tags.yaml` and no WordPress call is made. Exit
 `1` means the tag pull is stale: the agent refreshes it through the WordPress
 skill (`ewpa/get-tags`) and `tags.mjs sync`, never by inventing tags. `match.mjs`
@@ -102,7 +102,7 @@ images into `public/images/products/` and prints ready `<figure>` blocks whose
 caption is the model name.
 
 The registry is what tells the next run whether a tag already has products, so
-publish the article and record its tags in the same pass — a post whose tags were
+publish the article and record its tags in the same pass вЂ” a post whose tags were
 never recorded looks new to product matching.
 
 ## Idempotency

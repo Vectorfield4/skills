@@ -33,13 +33,10 @@ export async function run(argv = process.argv.slice(2)) {
 
     const metricsFile = join(mkdtempSync(join(tmpdir(), "shop-metrics-")), "requests.log");
     const started = Date.now();
-    const line = command
-      .map((part) => (/[\s"]/.test(part) ? `"${String(part).replace(/"/g, '\\"')}"` : part))
-      .join(" ");
-    const child = spawnSync(line, {
+    const child = spawnSync(command[0], command.slice(1), {
       stdio: "inherit",
       env: { ...process.env, SHOP_METRICS_FILE: metricsFile },
-      shell: true,
+      shell: process.platform === "win32",
     });
     const ms = Date.now() - started;
     const requests = existsSync(metricsFile)

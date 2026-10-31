@@ -1,0 +1,194 @@
+# Filled example for the precedent gate. Used by the test suite and as a
+# template for a real case. Numbers are hypotheses for the example only.
+
+schemaVersion: "1.0"
+status: filled
+slug: cv-acceptance-control
+workingTitle: "CV-приёмка квартир у субподрядчика"
+updatedAt: "2026-10-29"
+
+meta:
+  respondent: "Иванов Пётр"
+  role: "руководитель стройконтроля"
+  department: "технадзор"
+  interviewDate: "2026-10-28"
+  filledBy: "маркетинг"
+  reviewer: "редактор"
+  projectCode: "CV-2026-01"
+
+client:
+  disclosure: industry-and-scale
+  name: null
+  industry: "жилищное строительство"
+  audienceKey: "audiences.businessOwners"
+  region: "Москва"
+  scale:
+    objects: 1
+    units: 240
+    sqm: 18000
+    employees: 12
+  contract:
+    type: fixed-price
+    budgetBand: "1.5-2.5 млн ₽"
+    signedAt: "2026-08-01"
+
+problem:
+  beforeProcess: "Обход с бумажным чек-листом, фото дефектов в WhatsApp, акт подписывают от руки, реестр дефектов в Excel, который никто не сверяет с фотографиями."
+  trigger: "Срыв сдачи второй очереди и споры с субподрядчиком по уже закрытым дефектам."
+  costOfStatusQuo:
+    - name: "повторный выезд бригады"
+      value: "15 000-40 000 ₽ на квартиру"
+      source: "смета генподрядчика"
+    - name: "время на приёмку одной квартиры"
+      value: "45-90 минут"
+      source: "хронометраж прораба"
+  failedAttempts: "Пробовали Google Forms с фото, но фотографии не привязаны к плану и спор не закрывается."
+
+solution:
+  oneLiner: "CV-приёмка отделки квартиры по видео с телефона с привязкой дефектов к плану и автоматическим протоколом."
+  scope:
+    - "съёмка по подсказкам приложения"
+    - "детекция 15 классов дефектов отделки"
+    - "привязка дефекта к комнате и стене"
+    - "генерация протокола с фото и нормой"
+  outOfScope:
+    - "строительная экспертиза трещин"
+    - "скрытые работы и инженерные системы"
+    - "приёмка фасадов и кровли"
+  services:
+    - "computer-vision-systems"
+    - "3d-design"
+    - "document-processing"
+  solutionSlug: null
+  stack:
+    - "RT-DETR"
+    - "SAM"
+    - "ARKit"
+  integrations:
+    - "PDF-планы"
+    - "Telegram"
+  dataSources:
+    - "видео с телефона прораба"
+    - "планы квартир"
+  volumes:
+    - name: "квартир в пилоте"
+      value: "60"
+  deployment: "cloud"
+  hardware: "iPhone 13 Pro и новее"
+  team:
+    ours: 4
+    client: 2
+    roles:
+      - "ML-инженер"
+      - "инженер геометрии"
+      - "аннотатор"
+      - "менеджер проекта"
+
+timeline:
+  kickoff: "2026-08-01"
+  pilotEnd: "2026-09-30"
+  productionStart: "2026-10-15"
+  measurement:
+    from: "2026-09-01"
+    to: "2026-10-15"
+  durationWeeks: 10
+  slips:
+    - what: "разметка трещин"
+      weeks: 2
+      reason: "рельефная плитка дала ложные срабатывания"
+
+results:
+  primary:
+    - id: acceptance-time
+      name: "Время на приёмку квартиры"
+      unit: "мин"
+      baseline: 70
+      after: 25
+      deltaKind: absolute
+      direction: lower-is-better
+      window:
+        from: "2026-09-01"
+        to: "2026-10-15"
+      method: "Хронометраж обхода прорабом, 40 квартир, одна стадия отделки"
+      source: acceptance-act
+      evidencePath: "docs/evidence/acceptance-timing.xlsx"
+      confidence: measured
+      confirmedBy: "руководитель стройконтроля"
+    - id: repeat-visits
+      name: "Повторные выезды на квартиру"
+      unit: "%"
+      baseline: 60
+      after: 30
+      deltaKind: relative-percent
+      direction: lower-is-better
+      window:
+        from: "2026-09-01"
+        to: "2026-10-15"
+      method: "Журнал выездов технадзора, 60 квартир"
+      source: system-log
+      evidencePath: "docs/evidence/visits-log.xlsx"
+      confidence: measured
+      confirmedBy: "руководитель стройконтроля"
+    - id: auto-protocol
+      name: "Квартир с автопротоколом без ручной правки"
+      unit: "%"
+      baseline: 0
+      after: 90
+      deltaKind: percentage-points
+      direction: higher-is-better
+      window:
+        from: "2026-09-01"
+        to: "2026-10-15"
+      method: "Отчёт пилота, 60 квартир"
+      source: client-report
+      evidencePath: "docs/evidence/pilot-report.pdf"
+      confidence: measured
+      confirmedBy: "руководитель стройконтроля"
+  secondary: []
+  qualitative:
+    - "Спорные дефекты закрываются по фото с координатой, а не по памяти"
+  whatDidNotWork:
+    - "Рельефная плитка даёт ложные срабатывания, ушла во вторую итерацию модели"
+
+commercial:
+  packageSold: implementation
+  priceBand: "1.5-2.5 млн ₽"
+  recurring: "150 000 ₽ в месяц на объект"
+  clientOwns:
+    - "обученные веса"
+    - "датасет"
+    - "протоколы"
+  renewal: "расширение на следующую очередь"
+
+evidence:
+  artifacts:
+    - kind: report
+      path: "docs/evidence/pilot-report.pdf"
+      pii: false
+      note: "отчёт пилота"
+  whoCanConfirm:
+    - role: "руководитель стройконтроля"
+      contact: null
+  anonymization:
+    - "лица рабочих на фото замазаны"
+
+publication:
+  allowed: true
+  channels:
+    - "case"
+    - "solution-precedent"
+  quote:
+    text: "Протокол собираем за один обход."
+    authorRole: "руководитель стройконтроля"
+    approved: true
+  ndaConstraints: []
+  relatedServices:
+    - "computer-vision-systems"
+    - "3d-design"
+    - "document-processing"
+  relatedSolutions: []
+  relatedCases: []
+  articleAngles:
+    - "CV-приёмка квартир: как считать дефекты до сдачи"
+
+gates: null

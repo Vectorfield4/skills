@@ -13,11 +13,13 @@ const run = (script, args = []) =>
 
 const WITH_USAGE = [
   "assemble.mjs",
+  "bootstrap-region.mjs",
   "build-index.mjs",
   "fetch-boundaries.mjs",
   "fetch-osm-springs.mjs",
   "fetch-region-outline.mjs",
   "fetch-seas.mjs",
+  "fetch-roads.mjs",
   "fetch-water.mjs",
   "validate-region.mjs",
 ];

@@ -20,7 +20,7 @@ nodes, fewer requests.
 ## 1. Read the baseline
 
 ```bash
-node "$env:USERPROFILE/.config/opencode/skills/sales/sales-report/scripts/report.mjs" \
+# sales-report skill (read its SKILL.md for the command): \
   --run data/<host>/runs/<stamp> --catalog products/catalog.json
 ```
 

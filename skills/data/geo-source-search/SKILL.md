@@ -67,7 +67,7 @@ it also counts springs, lakes and `admin_level=6` boundaries. If every URL fails
   "checked": "2026-10-24",
   "sources": [{ "id": "osm-overpass", "url": "https://overpass-api.de/", "ok": true, "status": 200 }],
   "reachable": 7,
-  "overpass": { "springs": 605, "lakes": 2233, "district_boundaries": 18 }
+  "overpass": { "springs": 605, "lakes": 2233, "district_boundaries": 18, "roads": 4200 }
 }
 ```
 

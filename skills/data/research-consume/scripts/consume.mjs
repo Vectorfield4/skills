@@ -3,16 +3,20 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { isEntryPoint } from "#lib/cli.mjs";
+import { isEntryPoint, parseFlags, wantsHelp } from "#lib/cli.mjs";
 
-function parseArgs(argv) {
-  const o = { pack: null, out: null };
-  for (let i = 0; i < argv.length; i++) {
-    if (argv[i] === "--pack") o.pack = argv[++i];
-    else if (argv[i] === "--out") o.out = argv[++i];
-  }
-  return o;
-}
+const USAGE = `consume — read a research pack and emit a handoff
+
+  node consume.mjs --pack <pack.json> [--out handoff.json] [--help]
+
+Flags
+  --pack   Research pack JSON. Required.
+  --out    Write handoff to this file.
+  --help   Print this block and exit 0.
+
+Exit codes
+  0  success     1  missing file     2  usage error
+`;
 
 function slugify(text) {
   return String(text ?? "")
@@ -43,20 +47,55 @@ export function consume(packPath) {
 }
 
 export async function run(argv = process.argv.slice(2)) {
-  const o = parseArgs(argv);
-  if (!o.pack) {
-    console.error("Usage: node consume.mjs --pack <pack.json> [--out handoff.json]");
+  process.exitCode = 0;
+
+  if (wantsHelp(argv)) {
+    process.stdout.write(`${USAGE}\n`);
+    return 0;
+  }
+
+  let flags;
+  try {
+    flags = parseFlags(argv, {
+      pack: "string",
+      out: "string",
+      help: "boolean",
+    });
+  } catch (error) {
+    process.stderr.write(`${error.message}\n\n${USAGE}`);
+    process.exitCode = 2;
+    return null;
+  }
+
+  if (!flags.pack) {
+    process.stderr.write(`Usage: node consume.mjs --pack <pack.json> [--out handoff.json] [--help]\n\n${USAGE}`);
+    process.exitCode = 2;
+    return null;
+  }
+
+  let handoff;
+  try {
+    handoff = consume(flags.pack);
+  } catch (error) {
+    process.stderr.write(`${error?.message ?? error}\n`);
     process.exitCode = 1;
     return null;
   }
-  const handoff = consume(o.pack);
+
   const json = JSON.stringify(handoff, null, 2);
-  if (o.out) {
-    writeFileSync(resolve(o.out), json, "utf8");
-    console.error(`Wrote handoff to ${o.out}`);
+  if (flags.out) {
+    try {
+      writeFileSync(resolve(flags.out), json, "utf8");
+    } catch (error) {
+      process.stderr.write(`${error?.message ?? error}\n`);
+      process.exitCode = 1;
+      return null;
+    }
+    console.error(`Wrote handoff to ${flags.out}`);
   } else {
     console.log(json);
   }
+
   return handoff;
 }
 

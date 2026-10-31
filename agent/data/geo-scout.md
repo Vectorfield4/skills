@@ -41,17 +41,7 @@ Receive JSON:
 
 Run from the project root. Spell out script paths on the command line.
 
-1. OSM lookup:
-
-```bash
-node ~/.config/opencode/skills/data/geo-source-search/scripts/find-osm-region.mjs --name "<region_name>"
-```
-
-2. Source probe:
-
-```bash
-node ~/.config/opencode/skills/data/geo-source-search/scripts/probe-sources.mjs --sources "<sources>" --overpass-area <area_id>
-```
+Run the `geo-source-search` skill's `find-osm-region` step and `probe-sources` step (SKILL.md documents flags). Resolve script paths relative to the skill's base directory.
 
 Capture stdout. Do not pass `--out` unless the caller gives an explicit report path outside `geo/`.
 

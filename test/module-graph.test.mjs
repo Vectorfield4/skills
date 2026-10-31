@@ -57,6 +57,26 @@ describe("module graph", () => {
     expect(offenders).toEqual([]);
   });
 
+  // Cross-skill relative imports (skills/A/scripts -> skills/B/scripts) couple
+  // two skills at the file level. They are grandfathered below; any new one
+  // must go through `lib/` instead. Remove the entry once the shared code
+  // moves into lib/.
+  it("does not add new cross-skill relative imports", () => {
+    const grandfathered = new Set([
+      "skills/data/parse-fallback/scripts/fallback.mjs -> ../../try-parse-url/scripts/parse.mjs",
+      "skills/data/try-parse-url/scripts/parse.mjs -> ../../article-extractor/scripts/extract-article.mjs",
+      "skills/data/try-parse-url/scripts/batch.mjs -> ../../parse-fallback/scripts/fallback.mjs",
+      "skills/data/article-research/scripts/run.mjs -> ../../news-fetcher/scripts/fetch-candidates.mjs",
+      "skills/data/article-research/scripts/run.mjs -> ../../parse-fallback/scripts/fallback.mjs",
+    ]);
+    const cross = imports
+      .filter(({ file }) => file.includes(`${path.sep}skills${path.sep}`))
+      .filter(({ spec }) => /(\.\.\/)+[^/]+\/scripts\//.test(spec))
+      .map(({ file, spec }) => `${path.relative(ROOT, file)} -> ${spec}`.replace(/\\/g, "/"));
+    const offenders = cross.filter((edge) => !grandfathered.has(edge));
+    expect(offenders).toEqual([]);
+  });
+
   it("keeps the jev and prose libs inside this repository", () => {
     expect(existsSync(path.join(ROOT, "lib", "jev", "cli.mjs"))).toBe(true);
     expect(existsSync(path.join(ROOT, "lib", "prose", "prompts.mjs"))).toBe(true);

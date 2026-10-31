@@ -32,6 +32,7 @@
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
+import { parseArticle } from "#lib/content/utilities/read-article.mjs";
 
 const ARTICLES_DIR = join(process.cwd(), "articles");
 
@@ -51,7 +52,7 @@ const ABBREVIATIONS = /(?:\bи т\.д\.|\bт\.е\.|\bт\.к\.|\bдр\.|\bнап�
 
 /** Strips the YAML frontmatter block. */
 function stripFrontmatter(text) {
-  return text.replace(/^---\r?\n[\s\S]*?\r?\n---/, "").trim();
+  return parseArticle(text).body.trim();
 }
 
 /** Removes markdown link, image and emphasis syntax from a fragment. */

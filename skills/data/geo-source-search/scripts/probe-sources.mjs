@@ -98,7 +98,7 @@ const countOf = (payload) => Number(payload.elements?.[0]?.tags?.total ?? 0);
 
 export async function probeOverpass(areaRelationId, { timeoutMs = 120000, endpoint } = {}) {
   const area = overpassAreaId(areaRelationId);
-  const [springs, lakes, boundaries] = await Promise.all([
+  const [springs, lakes, boundaries, roads] = await Promise.all([
     overpass(`[out:json][timeout:110];area(${area})->.a;node["natural"="spring"](area.a);out count;`, { timeoutMs, endpoint }),
     overpass(
       `[out:json][timeout:110];area(${area})->.a;(way["natural"="water"]["water"="lake"](area.a);relation["natural"="water"]["water"="lake"](area.a););out count;`,
@@ -108,6 +108,7 @@ export async function probeOverpass(areaRelationId, { timeoutMs = 120000, endpoi
       timeoutMs,
       endpoint,
     }),
+    overpass(`[out:json][timeout:110];area(${area})->.a;way["highway"](area.a);out count;`, { timeoutMs, endpoint }),
   ]);
 
   return {
@@ -116,6 +117,7 @@ export async function probeOverpass(areaRelationId, { timeoutMs = 120000, endpoi
     springs: countOf(springs),
     lakes: countOf(lakes),
     district_boundaries: countOf(boundaries),
+    roads: countOf(roads),
   };
 }
 

@@ -21,7 +21,7 @@ you. You return a verdict and nothing else.
 
 The caller passes the draft text inline or a path under `articles/`. If only a
 path is given, read it. It may also pass the Jev report from
-`~/.config/opencode/skills/content/write-article/scripts/jev-review.mjs` (candidate list plus a
+the `write-article` skill's `jev-review` step (read its SKILL.md for the command and flags) (candidate list plus a
 `verdict`); when present, treat the candidates as a shortlist — confirm each
 against its filter file, or drop it.
 
@@ -35,15 +35,15 @@ Still return a full verdict.
 
 Your context starts empty, so read these every run:
 
-- `~/.config/opencode/skills/content/write-article/references/common.md`
-- `~/.config/opencode/skills/content/write-article/references/acceptance.md`
-- `~/.config/opencode/skills/content/write-article/references/genres/<genre>.md` for the draft's
+- the `write-article` skill's `references/` directory (read the relevant file via the skill)
+- the `write-article` skill's `references/` directory (read the relevant file via the skill)
+- the `write-article` skill's `references/` directory (read the relevant file via the skill) for the draft's
   `category`
 - the one structure the genre allows, under
-  `~/.config/opencode/skills/content/write-article/references/structures/<structure>.md`
+  the `write-article` skill's `references/` directory (read the relevant file via the skill)
 
 The prose `references/filters/*.md` documents are scanned in a cheap first pass by
-`~/.config/opencode/skills/content/write-article/scripts/jev-review.mjs` (gate G1, see
+the `write-article` skill's `jev-review` step (read its SKILL.md for the command and flags) (gate G1, see
 `references/jev.md`). When the caller
 passes its candidate list, start from it and open a specific filter file only to
 confirm a candidate before you report it. When no candidate list is given, read

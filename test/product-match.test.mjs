@@ -277,7 +277,7 @@ describe("figures and paths", () => {
 describe("inputs", () => {
   it("reads inline and block tag lists from article frontmatter", () => {
     const inline = readArticle('---\ntitle: "A"\ntags: [гуманоиды, "Boston Dynamics"]\n---\n\nText');
-    expect(inline).toEqual({ title: "A", tags: ["гуманоиды", "Boston Dynamics"], body: "\nText" });
+    expect(inline).toEqual({ title: "A", tags: ["гуманоиды", "Boston Dynamics"], body: "Text" });
 
     const block = readArticle("---\ntitle: B\ntags:\n  - коботы\n  - навигация\n---\nBody");
     expect(block.tags).toEqual(["коботы", "навигация"]);

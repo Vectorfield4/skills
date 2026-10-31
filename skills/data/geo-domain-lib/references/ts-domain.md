@@ -16,8 +16,10 @@ fetching in the browser.
 - `MapPoint` with projected-agnostic `lon`, `lat`, `kind` and `href`.
 - `District` with `springs`, `osm`, `geometry`, `bbox`, `osmRelationId`.
 - `AdministrativeCenter` with `name`, `lon`, `lat`, `osmType`, `osmId`, `source`.
-- `Region` with `water: Lake[]`, `sea: Sea[]`, `center: AdministrativeCenter | null`, counts and
-  geometry.
+- `Region` with `water: Lake[]`, `sea: Sea[]`, `roads: Road[]`, `localities: Locality[]`,
+  `outline: MultiPolygonGeometry | null`, `center: AdministrativeCenter | null`, counts and geometry.
+- `Road` with `tier: RoadTier` and `geometry: MultiLineStringGeometry`.
+- `Locality` with `name`, `lat`, `lon`, `springCount`.
 
 `Lake.districts` is computed, not stored in `water.geojson`. `Sea` comes from `sea.geojson`, is
 already clipped to the region bbox plus a margin, and keeps land and islands as holes.
@@ -38,7 +40,9 @@ already clipped to the region bbox plus a margin, and keeps land and islands as 
 5. reads `water.geojson` when present and assigns district slugs;
 6. reads `sea.geojson` when present and normalizes Polygon to MultiPolygon;
 7. reads the optional collection-level `admin_center` and exposes it as `center`;
-8. caches the region by slug.
+8. reads `roads.geojson` when present;
+9. derives `localities` from curated springs;
+10. caches the region by slug.
 
 `loadWater` samples outer rings, filters districts by bbox, then tests points with
 `geometryContains`. The result is a list of slugs. A lake that crosses a border lands in several
@@ -65,6 +69,16 @@ URLs have no trailing slash.
 the raster bbox into SVG x, y, width and height. The raster is Web Mercator, so the projection is
 linear and the image lines up with district paths without extra transforms. Missing metadata is not
 an error: maps render without the underlay.
+
+## New modules
+
+- `dedupe.ts`: `dropDuplicateSprings` removes a curated point and its nearby OSM node.
+- `district-labels.ts`: `placeDistrictLabels` avoids label collisions.
+- `locality-labels.ts`: `placeLocalityLabels`, `visibleLocalityLabels` filter settlement labels.
+- `map-group.ts`: `listMapGroups`, `loadMapGroup`, `validateMapGroups`.
+- `scale.ts`: `unitsPerMeterAtEquator`, `pickScaleBar`, `formatCoordinatePair`.
+- `stitch.ts`: `stitchLines` chains split road segments.
+- `tolerance.ts`: `polygonTolerance`, `roadTolerance`, `TOLERANCE_FLOOR`, `TOLERANCE_CEILING`.
 
 ## Page wiring
 

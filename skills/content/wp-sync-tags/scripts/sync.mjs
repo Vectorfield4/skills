@@ -3,39 +3,26 @@
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { isEntryPoint } from "#lib/cli.mjs";
+import { isEntryPoint, parseFlags, wantsHelp } from "#lib/cli.mjs";
+import { parseArticle } from "#lib/content/utilities/read-article.mjs";
 import { resolveWpConfig } from "#lib/wp-config.mjs";
 
-function parseArgs(argv) {
-  const o = { article: null, host: null, key: null, user: "admin", postId: null, dryRun: false };
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i];
-    if (a === "--article") o.article = argv[++i];
-    else if (a === "--host") o.host = argv[++i];
-    else if (a === "--key") o.key = argv[++i];
-    else if (a === "--user") o.user = argv[++i];
-    else if (a === "--post-id") o.postId = Number(argv[++i]);
-    else if (a === "--dry-run") o.dryRun = true;
-  }
-  return o;
-}
+const USAGE = `sync - assign frontmatter tags to a WordPress post
 
-function parseFrontmatter(raw) {
-  const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/);
-  if (!m) return null;
-  const fm = m[1];
-  const get = (k) => {
-    const mm = fm.match(new RegExp(`^${k}:\\s*(.*)$`, "m"));
-    return mm ? mm[1].trim().replace(/\r$/, "") : null;
-  };
-  const tagsRaw = get("tags");
-  let tags = [];
-  if (tagsRaw) {
-    try { tags = JSON.parse(tagsRaw); } catch {}
-  }
-  const wpId = get("wp_id");
-  return { tags, wpId: wpId ? Number(wpId) : null };
-}
+  node sync.mjs --article <md> --host <url> --key <ENV> [--user admin] [--post-id N] [--dry-run] [--help]
+
+Flags
+  --article   Article markdown file. Required.
+  --host      WordPress base URL. Required.
+  --key       Environment variable holding the application password. Required.
+  --user      WordPress user (default admin).
+  --post-id   Override the post id from frontmatter.
+  --dry-run   Resolve tags without writing.
+  --help      Print this block and exit 0.
+
+Exit codes
+  0  success     1  runtime error     2  usage error
+`;
 
 function slugify(name) {
   return String(name).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "");
@@ -52,11 +39,12 @@ async function api(base, auth, path, opts = {}) {
 
 export async function sync(articlePath, { host, key, user = "admin", postId = null, dryRun = false } = {}) {
   const raw = readFileSync(resolve(articlePath), "utf8");
-  const meta = parseFrontmatter(raw);
-  if (!meta) throw new Error("no frontmatter");
-  const id = postId ?? meta.wpId;
+  const article = parseArticle(raw);
+  const tags = article.tags;
+  const wpId = article.wpId;
+  const id = postId ?? wpId;
   if (!id) throw new Error("no wp_id in frontmatter (pass --post-id)");
-  if (meta.tags.length === 0) throw new Error("no tags in frontmatter");
+  if (tags.length === 0) throw new Error("no tags in frontmatter");
 
   const { baseUrl, authHeader } = resolveWpConfig({
     baseUrl: host,
@@ -65,7 +53,7 @@ export async function sync(articlePath, { host, key, user = "admin", postId = nu
   const base = baseUrl.replace(/\/+$/, "");
 
   const ids = [];
-  for (const name of meta.tags) {
+  for (const name of tags) {
     const slug = slugify(name);
     const found = await api(base, authHeader, `tags?slug=${encodeURIComponent(slug)}&per_page=1`);
     if (Array.isArray(found) && found.length > 0) {
@@ -81,18 +69,46 @@ export async function sync(articlePath, { host, key, user = "admin", postId = nu
   if (!dryRun) {
     await api(base, authHeader, `posts/${id}`, { method: "POST", body: JSON.stringify({ tags: ids }) });
   }
-  return { postId: id, tags: ids, names: meta.tags, dryRun };
+  return { postId: id, tags: ids, names: tags, dryRun };
 }
 
 export async function run(argv = process.argv.slice(2)) {
-  const o = parseArgs(argv);
-  if (!o.article || !o.host || !o.key) {
-    console.error("Usage: node sync.mjs --article <md> --host <url> --key <ENV> [--user admin] [--post-id N] [--dry-run]");
-    process.exitCode = 1;
+  if (wantsHelp(argv)) {
+    process.stdout.write(`${USAGE}\n`);
+    return 0;
+  }
+
+  let flags;
+  try {
+    flags = parseFlags(argv, {
+      article: "string",
+      host: "string",
+      key: "string",
+      user: "string",
+      "post-id": "number",
+      "dry-run": "boolean",
+      help: "boolean",
+    });
+  } catch (error) {
+    process.stderr.write(`${error.message}\n\n${USAGE}`);
+    process.exitCode = 2;
     return null;
   }
+
+  if (!flags.article || !flags.host || !flags.key) {
+    process.stderr.write(`Usage: node sync.mjs --article <md> --host <url> --key <ENV> [--user admin] [--post-id N] [--dry-run] [--help]\n\n${USAGE}`);
+    process.exitCode = 2;
+    return null;
+  }
+
   try {
-    const r = await sync(o.article, { host: o.host, key: o.key, user: o.user, postId: o.postId, dryRun: o.dryRun });
+    const r = await sync(flags.article, {
+      host: flags.host,
+      key: flags.key,
+      user: flags.user ?? "admin",
+      postId: flags["post-id"] ?? null,
+      dryRun: Boolean(flags["dry-run"]),
+    });
     console.log(`post ${r.postId} -> tags ${r.tags.join(",")} (${r.names.join(", ")})${r.dryRun ? " [dry-run]" : ""}`);
     return r;
   } catch (e) {

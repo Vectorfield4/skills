@@ -11,7 +11,7 @@ permission:
 
 # sales-filler
 
-One job: an article tag that has no product gets one — a real robot, from a
+One job: an article tag that has no product gets one - a real robot, from a
 brand we trust, with the tag that makes it appear under that article.
 
 You are the coordinator, not the brain. Every decision lives in a node
@@ -30,7 +30,7 @@ to run them in order, fan out where the tree allows it, and record what happened
 4. **A draft is a result.** `verdict: draft` goes to the catalog with its reasons
    in `review_note`; you do not "fix" it by publishing anyway.
 5. **Never hand-edit** `products/catalog.json`, `data/<host>/*.yaml` or
-   `scripts/` — the nodes write them.
+   `scripts/` - the nodes write them.
 
 ## Tree
 
@@ -51,45 +51,45 @@ P9 report            manifest + before/after
 ## Run
 
 ```bash
-S="$env:USERPROFILE/.config/opencode/skills/content"
-node "$S/sales-report/scripts/manifest.mjs" start --run data/hello-robot.ru/runs/<stamp>
+# S is the skill mount root provided by opencode; scripts live at <skill-dir>/scripts/<file> relative to each skill's base directory.
+# Start run: sales-report skill's manifest step --run data/hello-robot.ru/runs/<stamp>
 ```
 
-1. **capabilities** — `sales-write/scripts/capabilities.mjs --wp-skill` when this
+1. **capabilities** - sales-write skill's capabilities step, with --wp-skill when this
    session has the WordPress MCP, without the flag otherwise.
-2. **parallel, no network**: `product-match/scripts/aliases.mjs`,
-   `sales-vendors/scripts/vendors.mjs init` (then `list`),
-   `sales-audit/scripts/audit.mjs`.
-3. **harvest** — `sales-harvest/scripts/harvest.mjs --sellers … --max-brands 4`.
+2. **parallel, no network**: product-match skill's aliases step,
+   sales-vendors skill's vendors step (init, then list),
+   sales-audit skill's audit step.
+3. **harvest** - sales-harvest skill's harvest step (--sellers … --max-brands 4).
    Fan-out is allowed: one subagent per brand domain, then merge the warnings.
-4. **ledger** — `sales-price-ledger/scripts/ledger.mjs record`.
-5. **tagmap** — `sales-tagmap/scripts/tagmap.mjs --rules products/tag-rules.yaml`.
+4. **ledger** - sales-price-ledger skill's ledger step (record).
+5. **tagmap** - sales-tagmap skill's tagmap step (--rules products/tag-rules.yaml).
    Unmapped models are a report, not a reason to invent a rule.
-6. **plan** — `sales-plan/scripts/plan.mjs --limit 3 --premium-per-tag 1`.
-7. **gate** — `sales-gate/scripts/gate.mjs all`.
-8. **catalog** — `sales-catalog/scripts/merge.mjs`. Run `--check` first if you
+6. **plan** - sales-plan skill's plan step (--limit 3 --premium-per-tag 1).
+7. **gate** - sales-gate skill's gate step (all).
+8. **catalog** - sales-catalog skill's merge step. Run --check first if you
    want to know whether anything changed.
-9. **write** — read `data/<host>/transport.json`:
-   - `rest`: `sales-write/scripts/write-rest.mjs` (add `--dry-run` for a rehearsal).
-   - `wp`: `sales-write/scripts/write-wp-payload.mjs`, then execute the five calls
+9. **write** - read `data/<host>/transport.json`:
+   - `rest`: sales-write skill's write-rest step (add --dry-run for a rehearsal).
+   - `wp`: sales-write skill's write-wp-payload step, then execute the five calls
      per product in order with the WordPress MCP. Skip nothing: `product-create`
      has no tags, categories or images.
-10. **verify** — `sales-verify/scripts/verify.mjs store` and `… coverage`.
-11. **report** — `sales-report/scripts/report.mjs --run … --catalog products/catalog.json`.
+10. **verify** - sales-verify skill's verify step: store and coverage.
+11. **report** - sales-report skill's report step (--run … --catalog products/catalog.json).
 
 After every node, record it with the measuring wrapper, so the run has honest
 numbers instead of self-reported ones:
 
 ```bash
-node "$S/sales-report/scripts/measure.mjs" --run <dir> --node gate -- \
-  node "$S/sales-gate/scripts/gate.mjs" all --sellers data/<host>/sellers.yaml
+# sales-report skill's measure step --run <dir> --node gate -- \
+#   sales-gate skill's gate step all --sellers data/<host>/sellers.yaml
 ```
 
-`measure.mjs` prints the node output, then one line `node: status, ms, requests,
+The measuring wrapper prints the node output, then one line `node: status, ms, requests,
 exit`. Exit `1` is recorded as ok (a result); only `2` marks the node failed.
 
 Stop at the first exit code `2`. Exit `1` is a result (nothing to add, a product
-missing from the Store API) — report it, do not loop.
+missing from the Store API) - report it, do not loop.
 
 ## Report
 

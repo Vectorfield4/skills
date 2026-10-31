@@ -10,10 +10,10 @@ Follow these instructions when adding a new skill to the centralized skills repo
 ## Location
 
 - Path: `skills/<domain>/<skill-name>/SKILL.md`.
-- Use an existing folder under `skills/` (ai, backend, content, creative, data, devops, frontend, quality). Add a new domain only with justification.
+- Use an existing folder under `skills/` (ai, backend, content, creative, data, devops, frontend, quality). Prefer an existing domain and add a new one with justification.
 - Use kebab-case for the skill name.
-- Optional scripts live under `skills/<domain>/<skill-name>/scripts/`.
-- Never create a skill inside a project or under `.opencode`.
+- Keep optional scripts under `skills/<domain>/<skill-name>/scripts/`.
+- Keep every skill inside the centralized repo, under `skills/<domain>/`.
 
 ## Frontmatter
 
@@ -23,35 +23,33 @@ Follow these instructions when adding a new skill to the centralized skills repo
 
 ## Body
 
-- Write strict instructions. No narrative prose outside the description.
+- Write strict instructions; keep narrative prose in the description.
 - Use sentence case headings.
-- No em dashes. Use periods or commas.
-- Run the `unslop` skill on all text before committing.
+- Use periods and commas in place of em dashes.
+- After every change to skill text, run the `unslop` skill on it before committing.
 
 ## Shared code
 
 - Put shared code in `lib/` at repo root.
-- Import it through the `#lib/*` alias, for example `import { isEntryPoint } from "#lib/cli.mjs";`.
-- Never use relative climbs such as `../../lib/...`.
-- Never use package-name specifiers for repo code.
+- Import repo code through the `#lib/*` alias in every file, for example `import { isEntryPoint } from "#lib/cli.mjs";`.
 - Entry points detect themselves with `isEntryPoint(import.meta.url)` from `#lib/cli.mjs`.
 
 ## Dependency direction
 
-- Common skills must not reference any project repository (hellorobot, loginai).
-- Repository-specific skills may depend on common skills and libs. The reverse is forbidden.
 - Keep common skills generic and reusable.
+- Common skills reference only this repo's skills and libs.
+- Repository-specific skills may depend on common skills and libs.
 
 ## Single responsibility
 
 - Split search or discovery skills from publish-to-storage skills.
-- No cross-links between those two kinds.
+- Keep the two kinds independent of each other.
 - One skill, one job.
 
 ## Parallel creation
 
 - Create each independent skill in a separate subagent.
-- Run the subagents in parallel when their files do not overlap.
+- Run the subagents in parallel when their files are disjoint.
 - Give each subagent a complete file list, the constraints, and the lib imports it may use.
 - Review the output, run `unslop`, then run `npm test`.
 
@@ -59,21 +57,33 @@ Follow these instructions when adding a new skill to the centralized skills repo
 
 - Scripts open project files relative to `process.cwd()` when the files belong to the project.
 - Accept absolute paths for project files and document them in `SKILL.md`.
-- Engine imports always come from this repo through `#lib/*`.
-- Entry points use `isEntryPoint` from `#lib/cli.mjs`.
 - Inside `SKILL.md` write script paths relative to the skill directory.
-- In a shell outside the skill, spell out the path to the script.
+- Expose one entry point and document that command for the caller (see One entry point).
+
+## Progressive disclosure
+
+- A script is mentioned in exactly one place: its own SKILL.md, with a path relative to the skill directory.
+- README.md and agent/*.md reference the skill by name; the skill's SKILL.md provides the command.
+- Agent prompts and README files name the skill.
+
+## One entry point
+
+- A skill whose scripts run in order has one entry script that sequences them, stops on the first failure, and prints one JSON manifest on stdout while progress goes to stderr.
+- Expose that entry through the project as a single command, for example `npm run <name> -- --region ...`, and document only the command.
+- Run a single stage as a flag on the same entry (`--stages <name>`).
+- The entry resolves paths to scripts in other skills itself and reports a missing one by name.
+- Describe every run as one command with stage flags.
 
 ## Validation
 
 - Run `npm test`. The module graph test must pass.
 - Confirm every `#lib/*` import resolves to an existing file.
-- Confirm no relative climb into `lib/` or package-name specifier appears in skill scripts.
+- Confirm every repo import in skill scripts uses `#lib/*`.
 
-## No local opencode
+## Global mount
 
-- Do not create `.opencode` in any project.
 - Load skills from the global mount only.
+- Keep every skill in the centralized repo.
 
 ## Checklist
 
@@ -82,16 +92,17 @@ Follow these instructions when adding a new skill to the centralized skills repo
 - [ ] `name` is kebab-case and matches the directory.
 - [ ] `description` includes triggers.
 - [ ] Body uses strict instructions and sentence case headings.
-- [ ] No em dashes anywhere.
-- [ ] `unslop` applied to all text.
-- [ ] Shared code uses `#lib/*`, no relative climbs.
+- [ ] Em dashes replaced with periods and commas.
+- [ ] `unslop` applied after the last text change.
+- [ ] Shared code imported through `#lib/*`.
 - [ ] Entry points use `isEntryPoint`.
-- [ ] No references to project repositories in common skills.
-- [ ] Search and publish skills are separate.
+- [ ] Common skills stay generic and free of project repository names.
+- [ ] Search and publish skills kept separate.
 - [ ] Independent skills were built in separate parallel subagents.
 - [ ] Scripts use `process.cwd()` for project files.
+- [ ] The skill exposes one entry point documented as a single project command.
 - [ ] `npm test` passes.
-- [ ] No `.opencode` directory created in projects.
+- [ ] Skills live in the centralized repo under the global mount.
 
 ## Minimal template
 

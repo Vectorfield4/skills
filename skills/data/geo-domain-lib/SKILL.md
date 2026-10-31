@@ -15,12 +15,20 @@ rendering contract.
 
 | Module | Responsibility |
 |---|---|
-| `types.ts` | `Spring`, `OsmSpring`, `Lake`, `Sea`, `District`, `Region`, `MapPoint`, geometry types |
-| `load.ts` | reads `geo/` at build time, validates counts, caches regions, assigns lakes to districts, loads the sea backdrop |
+| `types.ts` | `Spring`, `OsmSpring`, `Lake`, `Sea`, `Road`, `RoadTier`, `District`, `Region`, `MapPoint`, `Locality`, geometry types |
+| `load.ts` | reads `geo/` at build time, validates counts, caches regions, assigns lakes to districts, loads sea/roads backdrop, derives localities |
 | `contains.ts` | bbox, point in ring, point in geometry, sampled points for lake overlap |
 | `basemap.ts` | reads `public/map/basemap.json` and places the raster on the map projection |
+| `dedupe.ts` | drops duplicate curated/OSM springs by distance and naming rules |
+| `district-labels.ts` | places district labels and avoids collisions |
+| `label.ts` | geometry area and label point helpers |
+| `locality-labels.ts` | places and filters settlement labels |
+| `map-group.ts` | validates and loads map groups spanning several regions |
 | `projection.ts` | Web Mercator projection and bounds for the SVG |
+| `scale.ts` | scale bar, units per meter, coordinate formatting |
+| `stitch.ts` | stitches split road segments into chains |
 | `svg.ts` | GeoJSON geometry to SVG path with pixel simplification |
+| `tolerance.ts` | simplification tolerance by extent and region count |
 
 Consumers: `src/widgets/springs-map/MapSvg.astro` (static maps), `InteractiveMap.tsx` (zoom and
 cards on `/map`), the home, region and district pages.
@@ -34,10 +42,16 @@ cards on `/map`), the home, region and district pages.
   the lake touches; it can be empty when boundaries are missing.
 - `Region.sea` is `Sea[]`. The sea is a backdrop clipped to the region bbox plus a margin, so it
   deliberately exceeds the district bounds. A missing `sea.geojson` is allowed and yields `[]`.
+- `Region.roads` is `Road[]`, one merged line collection per tier. A missing `roads.geojson` yields `[]`.
+- `Region.localities` is `Locality[]`, derived from curated spring localities and sorted by weight.
+- `Region.outline` is `MultiPolygonGeometry | null` from `region.geojson`.
 - Chemistry is null for OSM points. Curated points with `coordinates_only` also have `water: null`.
-- Projection bounds come from district geometries, not from points. Adding a lake does not move the
+- Projection bounds come from district geometries, not from points. Adding a lake or road does not move the
   map.
-- The static maps render no client JavaScript. `/map` is the only page with a hydrated island.
+- Maps are built by map groups spanning one or more regions; a district key is `region:slug`.
+- Vendor points are a separate layer and never enter `points` or clustering.
+- Clustering merges points closer than 54 CSS px; a pair never becomes a bubble.
+- The static maps render no client JavaScript. `/map` is the only area with a hydrated island.
 - Map markers are pre-projected on the server. The island receives `x`, `y` and path strings and
   never re-projects.
 

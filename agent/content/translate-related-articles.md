@@ -33,7 +33,7 @@ the `source-explorer` skill. Do not hardcode a feed inside this run.
 ## 2. Find articles
 
 ```bash
-node "$env:USERPROFILE/.config/opencode/skills/data/news-fetcher/scripts/fetch-candidates.mjs" \
+# news-fetcher skill (read its SKILL.md for the command): \
   --sources scripts/sources.json --out docs/research/candidates-<date>.json
 ```
 
@@ -49,7 +49,7 @@ Two passes, in this order:
 2. `published-check` — the gate that answers the actual question:
 
 ```bash
-node "$env:USERPROFILE/.config/opencode/skills/data/published-check/scripts/check.mjs" \
+# published-check skill (read its SKILL.md for the command): \
   --file docs/research/candidates-<date>.json --articles articles \
   --wp docs/research/collected.json --out docs/research/coverage-<date>.json
 ```
@@ -132,7 +132,7 @@ not allowed here.
 1. Freshness is a file question, not a WordPress question:
 
 ```bash
-node "$env:USERPROFILE/.config/opencode/skills/content/product-match/scripts/tags.mjs" \
+# product-match skill, tags step (read its SKILL.md for the command): \
   status --file data/<host>/tags.yaml
 ```
 
@@ -145,7 +145,7 @@ Exit `2` — the file is broken; report the line number and stop.
 2. Match and copy:
 
 ```bash
-node "$env:USERPROFILE/.config/opencode/skills/content/product-match/scripts/match.mjs" \
+# product-match skill, match step (read its SKILL.md for the command): \
   --article articles/<slug>.ru.md --registry data/<host>/tags.yaml \
   --catalog products/catalog.json --store https://<host> \
   --copy-images --out docs/research/product-match-<slug>.json

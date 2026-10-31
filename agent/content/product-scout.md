@@ -31,7 +31,7 @@ reason to guess tags — it is a reason to refresh (step 2).
 ## 2. Registry gate
 
 ```bash
-node "$env:USERPROFILE/.config/opencode/skills/content/product-match/scripts/tags.mjs" \
+# product-match skill, tags step (read its SKILL.md for the command): \
   status --file data/<host>/tags.yaml
 ```
 
@@ -42,7 +42,7 @@ node "$env:USERPROFILE/.config/opencode/skills/content/product-match/scripts/tag
   that skill prints. Save it as `docs/research/wp-tags-<date>.json` and merge it:
 
 ```bash
-node "$env:USERPROFILE/.config/opencode/skills/content/product-match/scripts/tags.mjs" \
+# product-match skill, tags step (read its SKILL.md for the command): \
   sync --file data/<host>/tags.yaml --input docs/research/wp-tags-<date>.json --host <host>
 ```
 
@@ -55,7 +55,7 @@ a refresh never loses our history.
 ## 3. Match
 
 ```bash
-node "$env:USERPROFILE/.config/opencode/skills/content/product-match/scripts/match.mjs" \
+# product-match skill, match step (read its SKILL.md for the command): \
   --article articles/<slug>.ru.md --registry data/<host>/tags.yaml \
   --catalog products/catalog.json --store https://<host> \
   --copy-images --out docs/research/product-match-<slug>.json

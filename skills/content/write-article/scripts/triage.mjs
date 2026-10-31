@@ -14,6 +14,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { askDecisions, hasKey } from "#lib/jev/client.mjs";
 import { scoreQuestion } from "#lib/jev/questions.mjs";
+import { parseArticle } from "#lib/content/utilities/read-article.mjs";
 
 const ROOT = process.cwd();
 const ARTICLES = path.join(ROOT, "articles");
@@ -81,9 +82,7 @@ for (const slug of targets) {
     console.error(`нет articles/${slug}.ru.md`);
     continue;
   }
-  const document = readFileSync(file, "utf8")
-    .replace(/^---\r?\n[\s\S]*?\r?\n---/, "")
-    .trim();
+  const document = parseArticle(readFileSync(file, "utf8")).body.trim();
   const questions = {};
   for (const [id, dim] of Object.entries(DIMENSIONS)) {
     questions[id] = scoreQuestion(dim.question, dim.levels);

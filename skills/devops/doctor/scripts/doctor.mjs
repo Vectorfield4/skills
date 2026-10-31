@@ -2,13 +2,24 @@
  * Doctor: verify the global skill mounts and the project copies they own.
  *
  * Usage:
- *   node skills/devops/doctor/scripts/doctor.mjs            check the mounts only
- *   node skills/devops/doctor/scripts/doctor.mjs <project>   also check the project
+ *   node skills/devops/doctor/scripts/doctor.mjs                     check the mounts only
+ *   node skills/devops/doctor/scripts/doctor.mjs <project>           also check the project
+ *   node skills/devops/doctor/scripts/doctor.mjs --sync [<project>]  then commit, rebase,
+ *                                                                   verify and push the repo
  */
-import { execFileSync } from "node:child_process";
-import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
+import { execFileSync, spawnSync } from "node:child_process";
+import {
+  existsSync,
+  lstatSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { homedir } from "node:os";
-import { basename, dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 /** Repo root: this script sits in skills/devops/doctor/scripts/. */
@@ -25,6 +36,7 @@ const KNOWN_SKILLS = [
   "devops/release",
   "devops/rollup",
   "quality/code-quality",
+  "quality/refactoring",
 ];
 
 const failures = [];
@@ -49,6 +61,22 @@ const MOVED_INTO_SKILLS = [
   "scripts/changelog.mjs",
   "scripts/commit-convention.mjs",
 ];
+
+/**
+ * Working-tree debris at the repo root: scratch scripts and capture files. `--sync`
+ * deletes them and adds the pattern to `.gitignore` instead of committing them.
+ */
+const DEBRIS = [
+  { pattern: /^tmp-.+\.mjs$/, ignore: "tmp-*.mjs" },
+  { pattern: /^debug\.txt$/, ignore: "debug.txt" },
+  { pattern: /^bulk\.json$/, ignore: "bulk.json" },
+];
+
+/** States that make a commit or a rebase unsafe until someone finishes or aborts them. */
+const OPERATIONS = ["MERGE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD", "rebase-merge", "rebase-apply"];
+
+/** The commit `--sync` writes when the working tree holds changes. Conventional, so a commit-msg hook accepts it. */
+const SYNC_SUBJECT = "chore: sync working tree";
 
 /** Text with line endings normalized, so a CRLF checkout compares equal to the template. */
 function normalized(text) {
@@ -142,6 +170,236 @@ function checkLeftovers(project) {
   }
 }
 
+/** A command that reports failure through its status instead of throwing. */
+function run(command, args, cwd) {
+  const result = spawnSync(command, args, { cwd, encoding: "utf8" });
+  return {
+    status: result.status ?? 1,
+    out: (result.stdout ?? "").trim(),
+    err: (result.stderr ?? "").trim(),
+  };
+}
+
+/** The last few non-empty lines of failed command output, so the reason reaches the report. */
+function explain(text, lines = 3) {
+  for (const line of text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).slice(-lines)) {
+    console.log(`     ${line}`);
+  }
+}
+
+/** Absolute git directory, or null outside a repo. */
+function gitDirectory(repo) {
+  const result = run("git", ["rev-parse", "--absolute-git-dir"], repo);
+  return result.status === 0 ? result.out : null;
+}
+
+/** Delete scratch files at the repo root instead of letting them into a commit. */
+function cleanDebris(repo) {
+  const removed = [];
+  const tracked = [];
+  for (const entry of DEBRIS) {
+    for (const name of readdirSync(repo)) {
+      const path = join(repo, name);
+      if (!entry.pattern.test(name) || !statSync(path).isFile()) continue;
+      if (run("git", ["ls-files", "--error-unmatch", "--", name], repo).status === 0) {
+        tracked.push(name);
+        continue;
+      }
+      rmSync(path, { force: true });
+      removed.push(name);
+    }
+  }
+  check(
+    tracked.length === 0,
+    tracked.length === 0
+      ? "sync: no tracked debris at the repo root"
+      : `sync: ${tracked.join(", ")} tracked by git, remove it and commit the removal`,
+  );
+  check(true, removed.length === 0 ? "sync: no debris at the repo root" : `sync: removed debris ${removed.join(", ")}`);
+}
+
+/** Keep the debris from coming back: the pattern belongs in `.gitignore`. */
+function ignoreDebris(repo) {
+  const file = join(repo, ".gitignore");
+  const current = existsSync(file) ? readFileSync(file, "utf8") : "";
+  const known = new Set(current.split(/\r?\n/).map((line) => line.trim()));
+  const missing = DEBRIS.map((entry) => entry.ignore).filter((ignore) => !known.has(ignore));
+  if (missing.length === 0) {
+    check(true, "sync: .gitignore already ignores the debris patterns");
+    return;
+  }
+  const separator = current && !current.endsWith("\n") ? "\n" : "";
+  writeFileSync(file, `${current}${separator}${missing.join("\n")}\n`);
+  check(true, `sync: .gitignore now ignores ${missing.join(", ")}`);
+}
+
+/** Stage the whole tree and commit it as one subject. */
+function commitWork(repo) {
+  const add = run("git", ["add", "-A"], repo);
+  if (add.status !== 0) {
+    check(false, "sync: git add -A failed");
+    explain(add.err);
+    return;
+  }
+  const staged = run("git", ["diff", "--cached", "--name-only", "-z"], repo);
+  const files = staged.out ? staged.out.split("\0").filter(Boolean) : [];
+  if (files.length === 0) {
+    check(true, "sync: nothing to commit, working tree clean");
+    return;
+  }
+  const commit = run("git", ["commit", "-m", SYNC_SUBJECT], repo);
+  if (commit.status !== 0) {
+    check(false, `sync: commit failed, ${files.length} file(s) still staged`);
+    explain(`${commit.err}\n${commit.out}`);
+    return;
+  }
+  check(true, `sync: committed ${files.length} file(s) as "${SYNC_SUBJECT}"`);
+}
+
+/** Rebase the branch onto its upstream. A conflict is aborted, never left half-applied. */
+function rebaseOnto(repo, branch, remote) {
+  const fetch = run("git", ["fetch", "--prune", remote], repo);
+  if (fetch.status !== 0) {
+    check(false, `sync: git fetch --prune ${remote} failed`);
+    explain(fetch.err);
+    return false;
+  }
+  check(true, `sync: fetched ${remote}`);
+
+  const upstream = `${remote}/${branch}`;
+  const behind = Number(run("git", ["rev-list", "--count", `HEAD..${upstream}`], repo).out || 0);
+  const ahead = Number(run("git", ["rev-list", "--count", `${upstream}..HEAD`], repo).out || 0);
+  if (behind === 0) {
+    check(true, `sync: ${branch} already contains ${upstream}${ahead ? `, ${ahead} commit(s) ahead` : ""}`);
+    return true;
+  }
+
+  const rebase = run("git", ["rebase", upstream], repo);
+  if (rebase.status !== 0) {
+    const directory = gitDirectory(repo);
+    const interrupted = directory
+      ? ["rebase-merge", "rebase-apply"].filter((name) => existsSync(join(directory, name)))
+      : [];
+    if (interrupted.length > 0) run("git", ["rebase", "--abort"], repo);
+    check(
+      false,
+      `sync: rebasing ${branch} onto ${upstream} conflicted${interrupted.length > 0 ? ", aborted and left as it was" : ""}`,
+    );
+    explain(`${rebase.err}\n${rebase.out}`);
+    console.log("     resolve by hand, commit the result, then rerun --sync");
+    return false;
+  }
+  check(true, `sync: rebased ${ahead} local commit(s) onto ${upstream} (${behind} incoming)`);
+  return true;
+}
+
+/** Prove the repo still runs before anything is pushed. */
+function verify(repo) {
+  const manifest = join(repo, "package.json");
+  if (!existsSync(manifest)) {
+    check(true, "sync: no package.json, nothing to run");
+    return true;
+  }
+  let scripts;
+  try {
+    const manifestText = readFileSync(manifest, "utf8").replace(/^\uFEFF/, "");
+    scripts = JSON.parse(manifestText).scripts ?? {};
+  } catch {
+    check(false, `${manifest}: not valid JSON, cannot verify`);
+    return false;
+  }
+  if (!scripts.test) {
+    check(true, "sync: package.json has no test script, nothing to run");
+    return true;
+  }
+  if (!existsSync(join(repo, "node_modules"))) {
+    check(false, "sync: node_modules missing, install dependencies before syncing");
+    return false;
+  }
+  const npm = process.platform === "win32" ? "npm.cmd" : "npm";
+  const started = Date.now();
+  const test = spawnSync(npm, ["test"], {
+    cwd: repo,
+    encoding: "utf8",
+    shell: process.platform === "win32",
+    timeout: 15 * 60 * 1000,
+  });
+  const seconds = ((Date.now() - started) / 1000).toFixed(1);
+  if (test.status !== 0) {
+    check(false, `sync: npm test failed after ${seconds}s`);
+    explain(`${test.stdout ?? ""}\n${test.stderr ?? ""}`);
+    return false;
+  }
+  check(true, `sync: npm test passed in ${seconds}s`);
+  return true;
+}
+
+/** Push only a repo that just passed every check. */
+function push(repo, branch) {
+  if (failures.length > 0) {
+    console.log(`     push skipped: ${failures.length} problem(s) above; fix them and rerun --sync`);
+    return;
+  }
+  const result = run("git", ["push"], repo);
+  if (result.status !== 0) {
+    check(false, `sync: git push ${branch} failed`);
+    explain(result.err);
+    return;
+  }
+  check(true, `sync: pushed ${branch}`);
+}
+
+/** Commit the tree, rebase onto the upstream, run the tests, push. The only writer in doctor. */
+function syncRepo(target) {
+  console.log("");
+  const toplevel = run("git", ["rev-parse", "--show-toplevel"], target);
+  if (toplevel.status !== 0) {
+    check(false, `${target}: not a git repository, nothing to sync`);
+    return;
+  }
+  const repo = toplevel.out;
+  check(true, `sync: ${repo}`);
+
+  const directory = gitDirectory(repo);
+  const interrupted = directory
+    ? OPERATIONS.filter((name) => existsSync(join(directory, name)))
+    : [];
+  if (interrupted.length > 0) {
+    check(false, `sync: ${interrupted.join(", ")} in progress, finish or abort it first`);
+    return;
+  }
+
+  const branch = run("git", ["rev-parse", "--abbrev-ref", "HEAD"], repo).out;
+  if (!branch || branch === "HEAD") {
+    check(false, "sync: detached HEAD, check out a branch first");
+    return;
+  }
+  const remote = "origin";
+  if (run("git", ["remote", "get-url", remote], repo).status !== 0) {
+    check(false, `sync: no ${remote} remote to rebase onto`);
+    return;
+  }
+  check(true, `sync: on ${branch}, upstream ${remote}/${branch}`);
+
+  cleanDebris(repo);
+  ignoreDebris(repo);
+  commitWork(repo);
+  const rebased = rebaseOnto(repo, branch, remote);
+  if (rebased) verify(repo);
+  push(repo, branch);
+}
+
+const args = process.argv.slice(2);
+const unknown = args.filter((arg) => arg.startsWith("--") && arg !== "--sync");
+if (unknown.length > 0) {
+  console.log(`fail ${unknown.join(", ")}: unknown flag`);
+  console.log("     usage: doctor.mjs [--sync] [project]");
+  process.exit(1);
+}
+const sync = args.includes("--sync");
+const project = args.find((arg) => !arg.startsWith("--"));
+const target = project ? resolve(project) : process.cwd();
+
 check(existsSync(join(ROOT, "skills")), `${ROOT}: skills directory exists`);
 check(existsSync(join(ROOT, "agent")), `${ROOT}: agent directory exists`);
 
@@ -154,11 +412,17 @@ for (const skill of KNOWN_SKILLS) {
   check(existsSync(join(CONFIG_DIR, "skills", skill, "SKILL.md")), `skill ${skill} resolves through the mount`);
 }
 
-const project = process.argv[2] ? resolve(process.argv[2]) : undefined;
-if (project && checkProject(project)) {
-  checkTemplates(project);
-  checkLeftovers(project);
+/** The skills repo is not a consumer project: the template and leftover checks do not describe it. */
+const insideRepo = target === ROOT || target.startsWith(`${ROOT}${sep}`);
+
+if (project && !insideRepo) {
+  if (checkProject(target)) {
+    checkTemplates(target);
+    checkLeftovers(target);
+  }
 }
+
+if (sync) syncRepo(target);
 
 console.log(failures.length === 0 ? "doctor: ok" : `doctor: ${failures.length} problem(s)`);
 process.exit(failures.length === 0 ? 0 : 1);

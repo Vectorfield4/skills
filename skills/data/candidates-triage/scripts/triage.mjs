@@ -3,21 +3,25 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { isEntryPoint } from "#lib/cli.mjs";
+import { isEntryPoint, parseFlags, wantsHelp } from "#lib/cli.mjs";
 import { canonicalizeUrl, recencyFactor, topicKeywords, matchesTopic } from "#lib/article-search.mjs";
 
-function parseArgs(argv) {
-  const o = { file: null, topic: null, lang: null, country: null, limit: 20, out: null };
-  for (let i = 0; i < argv.length; i++) {
-    if (argv[i] === "--file") o.file = argv[++i];
-    else if (argv[i] === "--topic") o.topic = argv[++i];
-    else if (argv[i] === "--lang") o.lang = argv[++i];
-    else if (argv[i] === "--country") o.country = argv[++i];
-    else if (argv[i] === "--limit") o.limit = Number(argv[++i]) || 20;
-    else if (argv[i] === "--out") o.out = argv[++i];
-  }
-  return o;
-}
+const USAGE = `triage — dedup, filter and shortlist candidates
+
+  node triage.mjs --file <candidates.json> [--topic t] [--lang en] [--country US] [--limit 20] [--out shortlist.json] [--help]
+
+Flags
+  --file     Candidates JSON. Required.
+  --topic    Topic filter.
+  --lang     Language filter.
+  --country  Country filter.
+  --limit    Max items (default 20).
+  --out      Write result to this file.
+  --help     Print this block and exit 0.
+
+Exit codes
+  0  success     1  missing file     2  usage error
+`;
 
 export function triage(candidates, opts = {}) {
   const seen = new Set();
@@ -38,21 +42,66 @@ export function triage(candidates, opts = {}) {
 }
 
 export async function run(argv = process.argv.slice(2)) {
-  const o = parseArgs(argv);
-  if (!o.file) {
-    console.error("Usage: node triage.mjs --file <candidates.json> [--topic t] [--lang en] [--country US] [--limit 20] [--out shortlist.json]");
+  process.exitCode = 0;
+
+  if (wantsHelp(argv)) {
+    process.stdout.write(`${USAGE}\n`);
+    return 0;
+  }
+
+  let flags;
+  try {
+    flags = parseFlags(argv, {
+      file: "string",
+      topic: "string",
+      lang: "string",
+      country: "string",
+      limit: "number",
+      out: "string",
+      help: "boolean",
+    });
+  } catch (error) {
+    process.stderr.write(`${error.message}\n\n${USAGE}`);
+    process.exitCode = 2;
+    return null;
+  }
+
+  if (!flags.file) {
+    process.stderr.write(`Usage: node triage.mjs --file <candidates.json> [--topic t] [--lang en] [--country US] [--limit 20] [--out shortlist.json] [--help]\n\n${USAGE}`);
+    process.exitCode = 2;
+    return null;
+  }
+
+  let candidates;
+  try {
+    candidates = JSON.parse(readFileSync(resolve(flags.file), "utf8"));
+  } catch (error) {
+    process.stderr.write(`${error?.message ?? error}\n`);
     process.exitCode = 1;
     return null;
   }
-  const candidates = JSON.parse(readFileSync(resolve(o.file), "utf8"));
-  const shortlist = triage(candidates, o);
+
+  const shortlist = triage(candidates, {
+    topic: flags.topic,
+    lang: flags.lang,
+    country: flags.country,
+    limit: flags.limit ?? 20,
+  });
+
   const json = JSON.stringify(shortlist, null, 2);
-  if (o.out) {
-    writeFileSync(resolve(o.out), json, "utf8");
-    console.error(`Wrote ${shortlist.length} shortlisted candidates to ${o.out}`);
+  if (flags.out) {
+    try {
+      writeFileSync(resolve(flags.out), json, "utf8");
+    } catch (error) {
+      process.stderr.write(`${error?.message ?? error}\n`);
+      process.exitCode = 1;
+      return null;
+    }
+    console.error(`Wrote ${shortlist.length} shortlisted candidates to ${flags.out}`);
   } else {
     console.log(json);
   }
+
   return shortlist;
 }
 

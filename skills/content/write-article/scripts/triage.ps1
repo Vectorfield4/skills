@@ -1,0 +1,1 @@
+& node (Join-Path $PSScriptRoot "triage.mjs") @args

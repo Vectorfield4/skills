@@ -9,6 +9,7 @@
 // Without an EN pair, or without RUNWARE_API_KEY, it skips and exits 0.
 
 import { existsSync, readFileSync } from "node:fs";
+import { parseArticle } from "#lib/content/utilities/read-article.mjs";
 import path from "node:path";
 import { askDecisions, hasKey } from "#lib/jev/client.mjs";
 import { noulFinding } from "#lib/jev/findings.mjs";
@@ -35,12 +36,8 @@ if (!existsSync(ruFile) || !existsSync(enFile)) {
   process.exit(0);
 }
 
-const body = (file) =>
-  readFileSync(file, "utf8")
-    .replace(/^---\r?\n[\s\S]*?\r?\n---/, "")
-    .trim();
-const ru = body(ruFile);
-const en = body(enFile);
+const ru = parseArticle(readFileSync(ruFile, "utf8")).body.trim();
+const en = parseArticle(readFileSync(enFile, "utf8")).body.trim();
 
 const findings = [];
 parityFindings(ru, en, findings);

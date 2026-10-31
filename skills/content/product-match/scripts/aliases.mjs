@@ -11,9 +11,9 @@
 
 import { join } from "node:path";
 import { isEntryPoint } from "#lib/cli.mjs";
-import { readAliasesFile } from "#lib/shop/aliases.mjs";
-import { parseShop, runNode } from "#lib/shop/cli.mjs";
-import { writeJson } from "#lib/shop/stable.mjs";
+import { readAliasesFile } from "#lib/sales/aliases.mjs";
+import { parseShop, runNode } from "#lib/sales/cli.mjs";
+import { writeJson } from "#lib/sales/stable.mjs";
 
 const USAGE = `Usage:
   aliases.mjs [--source src/shared/config/productTags.ts]

@@ -1,6 +1,6 @@
 ---
 name: generate-favicon
-description: Generates a site favicon via Runware direct API and wires it into the Astro layout. Use when a project needs a favicon/icon. Triggers: "GenerateFavicon", "generate favicon", "сгенерируй иконку", "favicon для сайта", "icon for the site".
+description: Generates a site favicon via Runware direct API and wires it into the Astro layout. Use when a project needs a favicon/icon. Triggers: "GenerateFavicon", "generate favicon", "СЃРіРµРЅРµСЂРёСЂСѓР№ РёРєРѕРЅРєСѓ", "favicon РґР»СЏ СЃР°Р№С‚Р°", "icon for the site".
 ---
 
 # generate-favicon
@@ -24,7 +24,7 @@ Paths below are relative to this skill directory. From the project root, spell
 out the global mount:
 
 ```powershell
-node "$env:USERPROFILE\.config\opencode\skills\creative\generate-favicon\scripts\render.mjs" --json
+node "~/.config/opencode\skills\creative\generate-favicon\scripts\render.mjs" --json
 ```
 
 ```bash

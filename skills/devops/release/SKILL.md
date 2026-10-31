@@ -1,6 +1,6 @@
 ---
 name: release
-description: Use when cutting a version of the project - bumping `package.json`, writing the `docs/releases/vX.Y.Z.md` changelog from the commits since the last tag, deleting finished plans, and committing + tagging + pushing so `ssg.yaml` deploys it. Triggers: "Release", "release", "cut a release", "bump version", "bump patch", "bump minor", "bump major", "выпустить версию", "новая версия", "зарелизить", "поднять версию", "релиз".
+description: Use when cutting a version of the project - bumping `package.json`, writing the `docs/releases/vX.Y.Z.md` changelog from the commits since the last tag, deleting finished plans, and committing + tagging + pushing so `ssg.yaml` deploys it. Triggers: "Release", "release", "cut a release", "bump version", "bump patch", "bump minor", "bump major", "РІС‹РїСѓСЃС‚РёС‚СЊ РІРµСЂСЃРёСЋ", "РЅРѕРІР°СЏ РІРµСЂСЃРёСЏ", "Р·Р°СЂРµР»РёР·РёС‚СЊ", "РїРѕРґРЅСЏС‚СЊ РІРµСЂСЃРёСЋ", "СЂРµР»РёР·".
 ---
 
 # Release
@@ -22,7 +22,7 @@ Paths below are relative to this skill directory. In a shell that sits in the
 project root, spell out the global mount:
 
 ```powershell
-node "$env:USERPROFILE\.config\opencode\skills\devops\release\scripts\release.mjs" --json
+node "~/.config/opencode\skills\devops\release\scripts\release.mjs" --json
 ```
 
 ```bash
@@ -52,7 +52,7 @@ node <this-skill>/scripts/release.mjs [patch|minor|major] --apply [--no-push] [-
   "tag": "v1.11.0",
   "since": "v1.10.0",
   "commitCount": 7,
-  "groups": [{ "key": "fix", "title": "Fixes", "emoji": "🐛", "count": 2 }],
+  "groups": [{ "key": "fix", "title": "Fixes", "emoji": "рџђ›", "count": 2 }],
   "plans": ["docs/plans/old-work.md"],
   "files": ["docs/releases/v1.11.0.md"],
   "needsConfirmation": false,

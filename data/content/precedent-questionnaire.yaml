@@ -1,0 +1,92 @@
+# Допустимые значения из проекта D:\docs\GitHub\login-ai
+# audiences.*: all, manufacturers, clinics, adAgencies, businessOwners
+# services.*: 3d-design, aeo, ai-1c-integration, ai-agents, ai-amocrm-integration, ai-application-rescue, ai-bitrix24-integration, ai-center-of-excellence, ai-chatbots, ai-cms-integration, ai-consulting, ai-crm-integration, ai-erp-integration, ai-for-site, ai-forecasting, ai-governance-compliance, ai-image-training, ai-infra-cost-optimization, ai-infrastructure, ai-localization-training, ai-max, ai-n8n-make, ai-pilot, ai-presentations-training, ai-presentations, ai-readiness-audit, ai-recruiter, ai-sales-agents, ai-security-audit, ai-security-gateway, ai-support-automation, ai-task-tracker-integration, ai-telegram, ai-text-training, ai-video-training, ai-voice-agents, ai-voice-training, ai-workflow-automation, anomaly-detection-systems, computer-vision-systems, content, content-localization, conversational-bi, corporate-ai-training, corporate-copilot, corporate-websites, data-annotation, data-engineering, data-readiness-audit, deterministic-rag-systems, document-processing, geo-ai-search, highload-backend, image-generation, information-monitoring, landing-pages, llm-evaluation, llm-fine-tuning, mlops-platforms, nlp-systems, predictive-analytics-systems, prompt-engineering, recommendation-systems, reinforcement-learning-systems, seo-aeo, seo, software-development, sovereign-model-deployment, speech-analytics, speech-recognition-systems, synthetic-data, ui-ux-design, video-generation, voice-audio-generation
+# solutions.*: agentic, agentic, computer-vision, content, llm, agentic, llm, real-estate, monitoring
+# cases.*: aeo-ai-visibility, agency-content-pipeline, clinic-ai-assistant, comment-sentiment-scoring, construction-3d-sales, erp-data-reconciliation, marketplace-reputation, packaging-cv-inspection, product-launch-video, quality-vision-line, reputation-monitoring-platform, retail-support-bot
+
+# Заполняет маркетинг. Пустая строка или null = «нет данных», не оценка.
+# Вопросы идут после значения, в комментарии.
+
+schemaVersion: "1.0"    # — Version of this contract; do not edit.
+status: draft    # 0.8 Состояние файла: draft | filled | reviewed | rejected
+slug: cv-acceptance-control    # 0.1 Slug страницы, латиница и дефисы  (@example: cv-acceptance-control)
+workingTitle: ""    # 0.2 Рабочее название кейса  (@example: CV-приёмка квартир у субподрядчика)
+updatedAt: 2026-10-28    # — Дата последнего изменения, ISO
+meta:  # 0.7 Кто дал факты
+  respondent: "не указан"    # 0.7a Кто дал факты: имя
+  role: "не указана"    # 0.7b Роль респондента
+  department: маркетинг    # 0.7c Отдел, который заполняет файл
+  interviewDate: 2026-10-28    # 0.7d Дата интервью, ISO
+  filledBy: маркетинг    # 0.7e Кто заполнил файл
+client:  # 1. Клиент и разрешение на публикацию
+  disclosure: industry-and-scale    # 1.1 Что разрешено раскрыть: name | industry-and-scale | anonymous
+  industry: ""    # 0.3 Отрасль клиента своими словами  (@example: жилищное строительство)
+  audienceKey: audiences.businessOwners    # 0.4 Ключ аудитории из словаря проекта
+  region: ""    # 0.5 Регион  (@example: Москва)
+  scale:  # 0.6 Масштаб операции
+    sqm: null    # 0.6c Площадь, м²
+    employees: null    # 0.6d Сотрудников у клиента
+  contract:  # 6.0 Договор
+    type: fixed-price    # 6.0a Тип договора: fixed-price | time-and-materials | retainer | pilot
+    budgetBand: null    # 6.0b Вилка бюджета, если её можно назвать
+    signedAt: null    # 6.0c Дата подписания, ISO
+problem:  # 2. Проблема до проекта
+  beforeProcess: ""    # 2.1 Как процесс работал до проекта, по шагам  (@example: Обход с бумажным чек-листом, фото в WhatsApp, акт подписывают от руки)
+  trigger: ""    # 2.2 Что стало триггером проекта  (@example: срыв сдачи второй очереди)
+  costOfStatusQuo:  # 2.3 Что стоило прежнее состояние; минимум одна строка
+    -
+      name: ""    # 2.3a Статья затрат  (@example: повторный выезд бригады)
+      value: ""    # 2.3b Значение с единицей  (@example: 15 000-40 000 ₽ на квартиру)
+      source: ""    # 2.3c Откуда число: отчёт клиента, смета, интервью  (@example: смета генподрядчика)
+solution:  # 3. Что построили
+  oneLiner: ""    # 3.1 Одним предложением, что построили  (@example: CV-приёмка отделки квартиры по видео с телефона)
+  scope:  # 3.2 Что вошло в scope
+    - ""
+  outOfScope:  # 3.3 Что сознательно не вошло; пустой список = незакрытая граница
+    - ""
+  services:  # 3.4 Slug'и услуг, которые уже были на сайте
+    - ""
+  deployment: cloud    # 3.7 Где развёрнуто: cloud | on-prem | hybrid | client-infrastructure
+timeline:  # 4. Сроки и окно замера
+  kickoff: ""    # 4.1a Старт проекта, ISO  (@example: "2026-08-01")
+results:  # 5. Результаты
+  primary:  # 5. Основные метрики: ровно три для карточки кейса, минимум одна для прецедента решения
+    -
+      name: ""    # 5.1 Название метрики как её называет клиент  (@example: Время на приёмку квартиры)
+      unit: ""    # 5.2 Единица измерения  (@example: мин)
+      baseline: null    # 5.3a Значение до проекта; null, если базовой линии не было  (@example: 70)
+      after: null    # 5.3b Значение после проекта  (@example: 25)
+      method: ""    # 5.5 Метод: что именно измерили, на какой выборке  (@example: Хронометраж обхода прорабом, 40 квартир, одна стадия отделки)
+      source: system-log    # 5.6 Источник цифры: system-log | client-report | acceptance-act | interview | estimate
+    -
+      name: ""    # 5.1 Название метрики как её называет клиент  (@example: Время на приёмку квартиры)
+      unit: ""    # 5.2 Единица измерения  (@example: мин)
+      baseline: null    # 5.3a Значение до проекта; null, если базовой линии не было  (@example: 70)
+      after: null    # 5.3b Значение после проекта  (@example: 25)
+      method: ""    # 5.5 Метод: что именно измерили, на какой выборке  (@example: Хронометраж обхода прорабом, 40 квартир, одна стадия отделки)
+      source: system-log    # 5.6 Источник цифры: system-log | client-report | acceptance-act | interview | estimate
+    -
+      name: ""    # 5.1 Название метрики как её называет клиент  (@example: Время на приёмку квартиры)
+      unit: ""    # 5.2 Единица измерения  (@example: мин)
+      baseline: null    # 5.3a Значение до проекта; null, если базовой линии не было  (@example: 70)
+      after: null    # 5.3b Значение после проекта  (@example: 25)
+      method: ""    # 5.5 Метод: что именно измерили, на какой выборке  (@example: Хронометраж обхода прорабом, 40 квартир, одна стадия отделки)
+      source: system-log    # 5.6 Источник цифры: system-log | client-report | acceptance-act | interview | estimate
+  whatDidNotWork:  # 5.10 Что не сработало и что осталось за рамками; минимум одна строка
+    - ""
+commercial:  # 6. Экономика
+  packageSold: pilot    # 6.1 Какой пакет продали: pilot | implementation | platform | custom
+  clientOwns:  # 6.4 Что принадлежит клиенту: код, веса, данные, протоколы
+    - ""
+evidence:  # 7. Доказательства
+  artifacts:  # 7.1 Артефакты
+    -
+      kind: act    # 7.1a Тип: act | screenshot | log | report | video | contract | dataset-sample
+      path: ""    # 7.1b Путь к файлу  (@example: docs/evidence/protocol-42.pdf)
+publication:  # 8. Публикация
+  allowed: false    # 8.0 Клиент разрешил публикацию
+  channels:  # 8.1 Каналы: case | solution-precedent | article | investors-page | sales-deck
+    - case
+  relatedServices:  # 8.3a Связанные услуги, slug'и
+    - ""
+gates: null    # Отчёт проверок; заполняет скрипт.

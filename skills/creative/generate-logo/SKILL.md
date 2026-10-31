@@ -1,6 +1,6 @@
 ---
 name: generate-logo
-description: Generates a site logo via Runware direct API and wires it into the Astro layout with responsive optimization. Use when a project needs a wordmark logo (site name, brand header). Triggers: "GenerateLogo", "generate logo", "сгенерируй логотип", "логотип сайта", "logo for the site".
+description: Generates a site logo via Runware direct API and wires it into the Astro layout with responsive optimization. Use when a project needs a wordmark logo (site name, brand header). Triggers: "GenerateLogo", "generate logo", "СЃРіРµРЅРµСЂРёСЂСѓР№ Р»РѕРіРѕС‚РёРї", "Р»РѕРіРѕС‚РёРї СЃР°Р№С‚Р°", "logo for the site".
 ---
 
 # generate-logo
@@ -24,7 +24,7 @@ Paths below are relative to this skill directory. From the project root, spell
 out the global mount:
 
 ```powershell
-node "$env:USERPROFILE\.config\opencode\skills\creative\generate-logo\scripts\render.mjs" --json
+node "~/.config/opencode\skills\creative\generate-logo\scripts\render.mjs" --json
 ```
 
 ```bash

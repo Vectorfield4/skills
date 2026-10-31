@@ -56,19 +56,35 @@ path to a JSON mapping, required only when `index.geojson` does not exist. `veri
 Run sequentially from the project root. Never parallelize these stages: later stages read earlier
 outputs.
 
+One entry runs the pipeline, from the project root:
+
 ```bash
-node ~/.config/opencode/skills/data/geo-region-assemble/scripts/fetch-region-outline.mjs --region <region> --area <area_id>
-node ~/.config/opencode/skills/data/geo-region-assemble/scripts/fetch-boundaries.mjs --region <region> --area <area_id> [--districts <file>]
-node ~/.config/opencode/skills/data/geo-region-assemble/scripts/fetch-osm-springs.mjs --region <region> --area <area_id>
-node ~/.config/opencode/skills/data/geo-region-assemble/scripts/fetch-water.mjs --region <region> --area <area_id> --min-area <min_area_km2>
-node ~/.config/opencode/skills/data/geo-region-assemble/scripts/fetch-seas.mjs --region <region>
-node ~/.config/opencode/skills/data/geo-region-assemble/scripts/build-index.mjs --region <region>
-node ~/.config/opencode/skills/data/geo-region-assemble/scripts/validate-region.mjs --region <region>
-node ~/.config/opencode/skills/data/geo-domain-lib/scripts/check-domain.mjs --project <project>
+npm run --silent geo:region -- --region <slug> [--area <id>] [--admin-level 6,5] \
+  [--bbox s,w,n,e] [--districts <path>] [--region-name "..."] \
+  [--stages a,b] [--dry-run] [--fresh]
+```
+
+Stage order: `scout → outline → boundaries → osm-springs → water → seas → roads → index → validate →
+domain`.
+
+- This command is the only way to run the pipeline: it carries the ordering, the flags and the
+  manifest. The entry knows `find-osm-region.mjs` and `check-domain.mjs` itself, and the stage
+  scripts stay an implementation detail.
+- `--stages <name>` reruns one stage the same way: an explicit list forces the stage even when its
+  files exist.
+- `--fresh` ignores the disk and rebuilds everything. Without flags a stage whose output files are
+  already on disk is skipped (incremental).
+- stdout is exactly one JSON manifest: every stage carries `stage`, `script`, `args`, `status` (`ran`,
+  `skipped` or `planned`), `code`, `duration_ms`, `ok` and `report`, and the run's total
+  `duration_ms` sits at the root. The manifest already carries every stage result.
+
+The basemap stays project-level and outside the manifest:
+
+```bash
 npm run basemap
 ```
 
-The last command runs only when `basemap` is in `stages`. It needs the project's `sharp` dependency
+It runs only when `basemap` is in `stages`. It needs the project's `sharp` dependency
 and network access to the EOX tiles. It writes `public/map/basemap.webp` and `basemap.json`.
 
 If `verify_project` is true:
@@ -86,8 +102,8 @@ the first non-zero exit. Do not retry a failed stage with different flags unless
 ## Write scope
 
 Allowed writes: `geo/<region>/region.geojson`, `boundaries.geojson`, `osm-springs.geojson`,
-per-district `osm-springs.geojson`, `water.geojson`, `sea.geojson`, `index.geojson`, and with the
-basemap stage `public/map/basemap.webp` plus `basemap.json`.
+per-district `osm-springs.geojson`, `water.geojson`, `sea.geojson`, `roads.geojson`, `index.geojson`,
+and with the basemap stage `public/map/basemap.webp` plus `basemap.json`.
 
 Forbidden: curated `springs.geojson`, `area.md`, `authoritative-sources.json`, `src/`, pages,
 components, configs, git.
@@ -118,7 +134,7 @@ do not report success for later stages.
 
 - No commits, no branches, no pushes.
 - No `client:*` directives and no UI edits.
-- Do not relax `validate-region.mjs` to make data pass.
+- Do not relax the region validator to make data pass.
 - Keep layer separation: curated stays curated, OSM stays OSM. The sea layer comes from Natural
   Earth 1:10m Ocean, public domain, and never merges with the OSM lakes.
 - Keep ODbL attribution in every OSM-derived collection.

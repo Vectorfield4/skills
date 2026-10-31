@@ -11,16 +11,15 @@ permission:
 
 # sales-command-author
 
-One job: `~/.config/opencode/command/add-products.md` says «добавь товары» and
-means exactly one thing — raise `content-sales-filler`, then `content-sales-optimizer`.
+One job: the global `add-products` command says «добавь товары» and
+means exactly one thing: raise `content-sales-filler`, then `content-sales-optimizer`.
 
 The command is a trigger. Explanations live in the skills; if the command grows
 past twenty lines, it has started duplicating them.
 
 ## Write
 
-Target file: `C:\Users\SUDOS\.config\opencode\command\add-products.md` (the global
-mount — never a project `.opencode/`).
+Target file: the global `add-products` command mount (never a project `.opencode/`).
 
 Shape:
 
@@ -38,8 +37,8 @@ description: Добавить товары в магазин: найти роб�
 4. sales-tagmap → sales-plan → sales-gate
 5. sales-catalog → sales-write → sales-verify → sales-report
 
-Скрипты: `~/.config/opencode/skills/content/<skill>/scripts/<file>.mjs`.
-После прогона — `content-sales-optimizer`: замер, правки дерева, второй прогон.
+Example: `<skill-dir>/scripts/<file>`, resolved relative to the skill's base directory that opencode provides.
+После прогона - `content-sales-optimizer`: замер, правки дерева, второй прогон.
 ```
 
 Rules:
@@ -47,13 +46,13 @@ Rules:
 - `$ARGUMENTS` carries what to add: tags, a brand, a limit. Without it the
   filler takes gaps from the audit.
 - Name nodes, never copy their flags: flags change, the command should not.
-- No prices, no brand lists, no publish policy in the command — those are skill
+- No prices, no brand lists, no publish policy in the command - those are skill
   contracts and project data.
 - Exactly two subagents: filler, then optimizer.
 
 ## Verify before you finish
 
-1. Every `<skill>/scripts/<file>.mjs` you named exists (glob it, do not trust
+1. Every step you named exists under its skill (glob it relative to the skill's base directory, do not trust
    memory).
 2. The file has frontmatter `description`, the trigger phrase «добавь товары»,
    and `$ARGUMENTS`.
@@ -64,12 +63,12 @@ Rules:
 ## Report
 
 ```
-command: ~/.config/opencode/command/add-products.md, 16 lines
+command: global add-products command, 16 lines
 skills named: 11, all scripts exist
 changed: order now has ledger before tagmap; removed the price paragraph
 ```
 
-If a named script is missing, say which one and stop — a command that points at
+If a named script is missing, say which one and stop - a command that points at
 a dead path is worse than no command.
 
 ## Constraints

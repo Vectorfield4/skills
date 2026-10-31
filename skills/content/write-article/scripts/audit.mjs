@@ -10,6 +10,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { getEntry } from "#lib/generation-queue.mjs";
+import { field, parseArticle } from "#lib/content/utilities/read-article.mjs";
 
 const ROOT = process.cwd();
 const ARTICLES = path.join(ROOT, "articles");
@@ -48,12 +49,8 @@ const GRANDFATHERED_FLOOR = new Set([
 
 const read = (p) => (fs.existsSync(p) ? fs.readFileSync(p, "utf8") : "");
 
-const frontmatter = (text) => /^---\r?\n([\s\S]*?)\r?\n---/.exec(text)?.[1] ?? "";
-const body = (text) => text.replace(/^---\r?\n[\s\S]*?\r?\n---/, "");
-
-function field(fm, key) {
-  return new RegExp(`^${key}:\\s*(.+)$`, "m").exec(fm)?.[1]?.trim();
-}
+const frontmatter = (text) => parseArticle(text).frontmatter;
+const body = (text) => parseArticle(text).body;
 
 function slugList(value) {
   if (!value) return [];
@@ -63,12 +60,6 @@ function slugList(value) {
   } catch {
     return [];
   }
-}
-
-/** Mirrors the schema default: draft unless `false`. */
-function readDraft(fm) {
-  const value = /^draft:\s*(true|false)\s*,?\s*$/m.exec(fm)?.[1];
-  return value !== "false";
 }
 
 const readCategory = (fm) => field(fm, "category")?.replace(/^["']|["']$/g, "") || undefined;
@@ -135,7 +126,7 @@ function audit(slug) {
 
   const ru = read(file);
   const fm = frontmatter(ru);
-  const draft = readDraft(fm);
+  const draft = parseArticle(ru).draft;
   const category = readCategory(fm);
   if (!draft) notes.push("уже не draft");
 
@@ -193,7 +184,7 @@ const args = process.argv.slice(2);
 const slugs = args.length
   ? args
   : articleSlugs().filter((slug) =>
-      readDraft(frontmatter(read(path.join(ARTICLES, `${slug}.ru.md`)))),
+      parseArticle(read(path.join(ARTICLES, `${slug}.ru.md`))).draft,
     );
 
 if (!slugs.length) {

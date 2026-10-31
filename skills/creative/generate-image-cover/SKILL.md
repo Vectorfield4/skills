@@ -1,13 +1,13 @@
 ---
 name: generate-image-cover
-description: Use when producing a cover or backdrop image — an article cover (assets/images/articles/<slug>.png), a service backdrop (assets/images/services/<slug>.png) or a solution backdrop (assets/images/solutions/<slug>.png). Dispatches the art-agent subagent, which authors the scene, builds <slug>.prompt.txt from the generation-queue record with this skill's image-prompt.mjs, and renders the PNG through the Runware MCP. Triggers: "GenerateImageCover", "generate cover", "cover gate", "article cover", "service backdrop", "solution backdrop", "image prompt", "сгенерировать обложку", "обложка", "бэкдроп".
+description: Use when producing a cover or backdrop image вЂ” an article cover (assets/images/articles/<slug>.png), a service backdrop (assets/images/services/<slug>.png) or a solution backdrop (assets/images/solutions/<slug>.png). Dispatches the art-agent subagent, which authors the scene, builds <slug>.prompt.txt from the generation-queue record with this skill's image-prompt.mjs, and renders the PNG through the Runware MCP. Triggers: "GenerateImageCover", "generate cover", "cover gate", "article cover", "service backdrop", "solution backdrop", "image prompt", "СЃРіРµРЅРµСЂРёСЂРѕРІР°С‚СЊ РѕР±Р»РѕР¶РєСѓ", "РѕР±Р»РѕР¶РєР°", "Р±СЌРєРґСЂРѕРї".
 ---
 
 # GenerateImageCover
 
 Owns the cover/backdrop pipeline for all three content kinds. This skill holds
 the prompt templates and the prompt builder; `art-agent` runs the pipeline end to
-end — author, gate, build, render, place — so the procedure lives in one place.
+end вЂ” author, gate, build, render, place вЂ” so the procedure lives in one place.
 
 `write-article` and `write-service` delegate their cover gate to this skill
 instead of reaching into each other's folders.
@@ -38,9 +38,9 @@ supporting motif may be resolved from `keywords`.
    `scripts/queue.mjs set-visual-config`, runs the advisory scene gate
    (`scripts/story-gate.mjs`), builds `<slug>.prompt.txt` with
    `image-prompt.mjs --force`, renders once through the Runware MCP, verifies real
-   pixels (≥1200×630, no resize) and places it as `<slug>.png`.
+   pixels (в‰Ґ1200Г—630, no resize) and places it as `<slug>.png`.
 2. Report the placed `<slug>.png`. The queue record stays until the publishing
-   pipeline drops it — this skill never removes it.
+   pipeline drops it вЂ” this skill never removes it.
 
 ## Scripts
 
@@ -48,7 +48,7 @@ Paths below are relative to this skill directory. From the project root, spell
 out the global mount:
 
 ```powershell
-node "$env:USERPROFILE\.config\opencode\skills\creative\generate-image-cover\scripts\queue.mjs" list --json
+node "~/.config/opencode\skills\creative\generate-image-cover\scripts\queue.mjs" list --json
 ```
 
 ```

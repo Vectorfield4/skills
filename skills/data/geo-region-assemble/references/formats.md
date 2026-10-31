@@ -180,6 +180,24 @@ needs `fill-rule="evenodd"` to draw water and leave land empty. A disjoint resul
 MultiPolygon. Coordinates are rounded to five decimals and rings are simplified at `--tolerance`
 degrees (default 0.002).
 
+## `roads.geojson`
+
+FeatureCollection of MultiLineStrings for decorative roads. All ways of a tier are merged into one
+feature, so the map renders a single `<path>` per tier. Coordinates are `[lon, lat]`, WGS84.
+
+Collection fields: `name`, `region`, `source`, `license`, `retrieved`, `tolerance`, `count`,
+`features`.
+
+Feature fields:
+
+| Field | Meaning |
+|---|---|
+| `properties.tier` | `major` or `minor` |
+| `properties.lines` | number of merged OSM ways |
+| `geometry` | MultiLineString |
+
+The layer is visual only. A missing `roads.geojson` is allowed; `Region.roads` becomes `[]`.
+
 ## `area.md` and `authoritative-sources.json`
 
 `area.md` exists at region and district level. It is prose, not generated data. Loader sections

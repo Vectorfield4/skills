@@ -38,12 +38,17 @@ so the page has a usable map before hydration.
 The island receives:
 
 - `width`, `height`, viewBox size;
-- `districts` with path, slug, name, href;
+- `districts` with path, slug, name, href, spring count, label point;
 - `sea` with path and name, drawn after the raster and before the districts;
-- `water` with path and name;
-- `points` with `x`, `y`, `lon`, `lat`, `kind`, `href`, district, locality, chemistry, status;
+- `water` is empty on first paint; lakes arrive from `waterHref` (`/map/<slug>/water.json`);
+- `roads` with tier and path;
+- `points` as tuples (id, x, y, kind, name, lon, lat, href, district index, locality, chemistry, status, flagged);
+- `vendorPoints` with badge position, type, href, price, city;
+- `localityLabels` with name, x, y, weight;
 - `center` with `name`, `x`, `y`, or null;
-- `outline` with the projected path of `region.geojson`, or null.
+- `outline` with the projected path of `region.geojson`, or null;
+- `basemap`, `basemapVariants`, `unitsPerMeter`, `centerLat`;
+- `regions` selector options for the map group.
 
 The island does not know about GeoJSON, projection or the file system.
 
@@ -111,6 +116,52 @@ In the interactive renderer the star radius, label font size and label offset ar
 `view.scale`, so the marker keeps a constant screen size while zooming. The group ignores pointer
 events, so it never blocks panning or a spring click. Layer order puts it above lakes and points.
 `MapSvg` also adds the legend item "Административный центр" when a center exists.
+
+## Map groups
+
+Maps are built by groups spanning one or more regions (`src/shared/config/map-groups.ts`).
+A district key is `region:slug`, a point key is `region:id`. The projection is computed
+over the union of all district geometries in the group, so points from different regions
+share one coordinate system.
+
+`validateMapGroups` ensures: no empty groups, no duplicate slugs, no slug colliding with
+a region name, every region exists, no region in two groups.
+
+## Roads layer
+
+Decorative only. Each tier (`major`, `minor`) is one merged `MultiLineString`.
+Roads are stitched into chains (`stitchLines`) before simplification, so a single
+tolerance pass removes most vertices. Tolerance grows with region count (`roadTolerance`).
+
+## Vendor layer
+
+Companies are projected by the same function as springs but never enter `points`.
+They render as warm badges above the spring layer. Only `coords.precision: exact`
+gets a point; `district` and `city` precision stay point-less.
+
+## Clustering
+
+Points closer than `CLUSTER_RADIUS_PX` (54 CSS px) at the current scale merge into
+a numbered bubble. A pair never becomes a bubble (minimum three). The first frame
+is clustered on the server using `NOMINAL_VIEWPORT` (1440×900). The true center
+stays in `anchorX/anchorY`; the bubble is drawn with an edge offset but does not
+move the group.
+
+## Lazy water
+
+Lake geometry is not in the page props. It arrives from `/map/<slug>/water.json`
+on the first water toggle. Only the sea backdrop ships with the page.
+
+## Locality and district labels
+
+Settlement labels come from `region.localities` (derived from curated springs).
+District labels use `geometryLabelPoint` and avoid collisions via `placeDistrictLabels`.
+Labels keep a constant screen size at any zoom.
+
+## Scale bar
+
+`unitsPerMeterAtEquator` + `pickScaleBar` produce a bar whose length is a round
+number of metres at the region's latitude.
 
 ## Basemap layer
 
