@@ -171,11 +171,11 @@ function checkLeftovers(project) {
 }
 
 /** A command that reports failure through its status instead of throwing. */
-function run(command, args, cwd) {
+function run(command, args, cwd, { raw = false } = {}) {
   const result = spawnSync(command, args, { cwd, encoding: "utf8" });
   return {
     status: result.status ?? 1,
-    out: (result.stdout ?? "").trim(),
+    out: raw ? (result.stdout ?? "") : (result.stdout ?? "").trim(),
     err: (result.stderr ?? "").trim(),
   };
 }
@@ -195,7 +195,7 @@ function gitDirectory(repo) {
 
 /** Delete scratch files at the repo root instead of letting them into a commit. */
 function cleanDebris(repo) {
-  const removed = [];
+  const removed = new Map();
   const tracked = [];
   for (const entry of DEBRIS) {
     for (const name of readdirSync(repo)) {
@@ -206,7 +206,7 @@ function cleanDebris(repo) {
         continue;
       }
       rmSync(path, { force: true });
-      removed.push(name);
+      removed.set(entry.ignore, name);
     }
   }
   check(
@@ -215,15 +215,25 @@ function cleanDebris(repo) {
       ? "sync: no tracked debris at the repo root"
       : `sync: ${tracked.join(", ")} tracked by git, remove it and commit the removal`,
   );
-  check(true, removed.length === 0 ? "sync: no debris at the repo root" : `sync: removed debris ${removed.join(", ")}`);
+  check(
+    true,
+    removed.size === 0
+      ? "sync: no debris at the repo root"
+      : `sync: removed debris ${[...removed.values()].join(", ")}`,
+  );
+  return [...removed.keys()];
 }
 
-/** Keep the debris from coming back: the pattern belongs in `.gitignore`. */
-function ignoreDebris(repo) {
+/** Keep the debris from coming back: only the patterns whose files were actually there. */
+function ignoreDebris(repo, patterns) {
+  if (patterns.length === 0) {
+    check(true, "sync: .gitignore left alone, no debris to guard against");
+    return;
+  }
   const file = join(repo, ".gitignore");
   const current = existsSync(file) ? readFileSync(file, "utf8") : "";
   const known = new Set(current.split(/\r?\n/).map((line) => line.trim()));
-  const missing = DEBRIS.map((entry) => entry.ignore).filter((ignore) => !known.has(ignore));
+  const missing = patterns.filter((pattern) => !known.has(pattern));
   if (missing.length === 0) {
     check(true, "sync: .gitignore already ignores the debris patterns");
     return;
@@ -231,6 +241,55 @@ function ignoreDebris(repo) {
   const separator = current && !current.endsWith("\n") ? "\n" : "";
   writeFileSync(file, `${current}${separator}${missing.join("\n")}\n`);
   check(true, `sync: .gitignore now ignores ${missing.join(", ")}`);
+}
+
+/** A submodule pinned to a commit no remote carries breaks a fresh clone even though this clone looks fine. */
+function checkSubmodules(repo) {
+  const listing = run("git", ["submodule", "status", "--recursive"], repo, { raw: true });
+  if (listing.status !== 0) {
+    check(false, "sync: git submodule status failed");
+    explain(listing.err);
+    return;
+  }
+  const lines = listing.out.split(/\r?\n/).filter(Boolean);
+  if (lines.length === 0) {
+    check(true, "sync: no submodules to restore");
+    return;
+  }
+  for (const line of lines) {
+    const match = /^([ +\-U]?)([0-9a-f]{40,64})\s+(\S+)/.exec(line);
+    if (!match) continue;
+    const [, state, sha, path] = match;
+    const short = sha.slice(0, 7);
+    if (state === "-") {
+      check(false, `sync: submodule ${path} not initialized, run git submodule update --init --recursive`);
+      continue;
+    }
+    const sub = join(repo, path);
+    const fetch = run("git", ["fetch", "--quiet", "origin"], sub);
+    if (fetch.status !== 0) {
+      check(false, `sync: submodule ${path} could not fetch origin`);
+      explain(fetch.err);
+      continue;
+    }
+    const refs = run("git", ["for-each-ref", "--contains", sha, "--format=%(refname)", "refs/remotes", "refs/tags"], sub);
+    if (refs.status !== 0) {
+      check(false, `sync: submodule ${path} pinned at ${short}, commit is not in this clone`);
+      continue;
+    }
+    // `origin/HEAD` is an alias of a branch already listed, so it never names the carrier.
+    const carrying = refs.out
+      .split(/\r?\n/)
+      .map((ref) => ref.trim())
+      .filter((ref) => ref !== "" && !ref.endsWith("/HEAD"));
+    if (carrying.length > 0) {
+      check(true, `sync: submodule ${path} pinned at ${short}, carried by ${carrying[0]}`);
+      continue;
+    }
+    const tip = run("git", ["rev-parse", "--short", "origin/HEAD"], sub);
+    const hint = tip.status === 0 ? `; origin/HEAD is ${tip.out}` : "";
+    check(false, `sync: submodule ${path} pinned at ${short}, no remote ref carries it${hint}; update the pin`);
+  }
 }
 
 /** Stage the whole tree and commit it as one subject. */
@@ -381,9 +440,10 @@ function syncRepo(target) {
   }
   check(true, `sync: on ${branch}, upstream ${remote}/${branch}`);
 
-  cleanDebris(repo);
-  ignoreDebris(repo);
+  const debris = cleanDebris(repo);
+  ignoreDebris(repo, debris);
   commitWork(repo);
+  checkSubmodules(repo);
   const rebased = rebaseOnto(repo, branch, remote);
   if (rebased) verify(repo);
   push(repo, branch);

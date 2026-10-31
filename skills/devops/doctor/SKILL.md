@@ -41,9 +41,10 @@ node "~/.config/opencode\skills\devops\doctor\scripts\doctor.mjs" <project>
 
 1. Scratch files at the repo root (`tmp-*.mjs`, `debug.txt`, `bulk.json`) are deleted, not committed, and their patterns join `.gitignore`.
 2. `git add -A`, then one commit `chore: sync working tree`. A clean tree means no commit.
-3. `git fetch --prune origin`, then `git rebase origin/<branch>` when the remote moved ahead. A conflicted rebase is aborted, so the branch is left exactly as it was.
-4. The `test` script from `package.json` runs when the script and `node_modules` are both present.
-5. `git push`, only after the checks, the rebase and the tests all passed.
+3. Every submodule must be initialized and pinned to a commit an upstream ref carries, otherwise a fresh clone cannot restore it.
+4. `git fetch --prune origin`, then `git rebase origin/<branch>` when the remote moved ahead. A conflicted rebase is aborted, so the branch is left exactly as it was.
+5. The `test` script from `package.json` runs when the script and `node_modules` are both present.
+6. `git push`, only after the checks, the rebase and the tests all passed.
 
 Sync works on one branch, never force-pushes and never resolves a conflict for you. It targets the project argument when one is given, and the current directory otherwise. Directories named in the debris list are not touched; only files at the repo root are.
 
