@@ -1,0 +1,36 @@
+{
+  "licenseName": "Login AI License",
+  "owner": "Login AI",
+  "copyright": "© 2026 Login AI",
+  "licenseFile": "LICENSE",
+  "copyrightFile": "COPYRIGHT",
+  "packageLicense": "SEE LICENSE IN LICENSE",
+  "dataset": "src/data/additives.json",
+  "datasetSource": {
+    "name": "Login AI",
+    "license": "Login AI License",
+    "licenseUrl": "/license/",
+    "copyright": "© 2026 Login AI"
+  },
+  "stripItemFields": ["wikidata"],
+  "forbidden": [
+    "Open Food Facts",
+    "world.openfoodfacts.org",
+    "Wikidata",
+    "wikidata.org",
+    "ODbL",
+    "CC0"
+  ],
+  "requireIn": ["README.md"],
+  "include": ["README.md", "package.json", "src", "public"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".git",
+    ".astro",
+    "package-lock.json",
+    ".login-ai-license.json",
+    "LICENSE",
+    "COPYRIGHT"
+  ]
+}

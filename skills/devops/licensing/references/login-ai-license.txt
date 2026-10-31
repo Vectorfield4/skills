@@ -1,0 +1,33 @@
+Login AI License
+
+Copyright (c) 2026 Login AI. All rights reserved.
+
+This license applies to the project, its source code, documentation, datasets,
+and all other materials distributed with it (the "Materials").
+
+1. Ownership. The Materials are proprietary to Login AI. No title or ownership
+   rights are transferred.
+
+2. Permitted use. Login AI grants a non-exclusive, non-transferable, revocable,
+   royalty-free right to use the Materials for internal evaluation and
+   development, unless a separate written agreement states otherwise.
+
+3. Restrictions. You may not copy, modify, distribute, publish, sublicense,
+   sell, lease, or make the Materials available to third parties without prior
+   written permission from Login AI. You may not use the Materials to train
+   machine learning models or to create derivative datasets without prior
+   written permission from Login AI.
+
+4. No warranty. THE MATERIALS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+   KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+
+5. Limitation of liability. IN NO EVENT SHALL LOGIN AI BE LIABLE FOR ANY CLAIM,
+   DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR
+   OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE MATERIALS OR THE
+   USE OR OTHER DEALINGS IN THE MATERIALS.
+
+6. Termination. Rights granted under this license terminate automatically if
+   you breach its terms.
+
+For permissions, contact Login AI.

@@ -33,6 +33,7 @@ const KNOWN_SKILLS = [
   "content/write-solution",
   "creative/generate-image-cover",
   "devops/doctor",
+  "devops/licensing",
   "devops/release",
   "devops/rollup",
   "quality/code-quality",
