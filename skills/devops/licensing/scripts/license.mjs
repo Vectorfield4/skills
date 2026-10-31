@@ -1,5 +1,5 @@
 /**
- * Apply and audit the Login AI License on a project and its dataset.
+ * Apply and audit the Vectorfield4 Main License with the Login AI sublicense.
  *
  * Usage:
  *   node scripts/license.mjs <project> --check
@@ -18,7 +18,12 @@ import { fileURLToPath } from "node:url";
 import { isEntryPoint, printJson, runUtility } from "#lib/cli.mjs";
 
 const SKILL_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const DEFAULT_LICENSE = join(SKILL_DIR, "references", "login-ai-license.txt");
+const DEFAULT_MAIN_LICENSE = join(
+  SKILL_DIR,
+  "references",
+  "vectorfield4-main-license.txt",
+);
+const DEFAULT_SUBLICENSE = join(SKILL_DIR, "references", "login-ai-license.txt");
 const CONFIG_NAME = ".login-ai-license.json";
 
 const TEXT_EXTENSIONS = new Set([
@@ -45,14 +50,38 @@ const TEXT_EXTENSIONS = new Set([
 ]);
 
 const DEFAULTS = {
-  licenseName: "Login AI License",
-  owner: "Login AI",
+  owner: "Vectorfield4",
+  author: {
+    name: "Filipp Kuksov",
+    email: "vectorfield4@gmail.com",
+    url: "https://github.com/Vectorfield4",
+  },
   copyright: "© 2026 Login AI",
-  licenseFile: "LICENSE",
+  mainLicenseName: "Vectorfield4 Main License",
+  mainLicenseFile: "LICENSE",
+  licenseName: "Login AI License",
+  licenseFile: "LICENSE-LOGIN-AI",
   copyrightFile: "COPYRIGHT",
-  packageLicense: "SEE LICENSE IN LICENSE",
+  packageLicense: "Login AI",
+  licenseContains: [
+    "Login AI License",
+    "sublicense",
+    "Vectorfield4",
+    "cto@loginai.ru",
+    "vectorfield4@gmail.com",
+    "read",
+    "process",
+    "edit",
+    "transfer",
+    "display",
+    "commercial",
+    "permission",
+  ],
   dataset: null,
-  datasetSource: null,
+  datasetSource: {
+    author: "Filipp Kuksov",
+    licenseUrl: "/license/",
+  },
   stripItemFields: [],
   forbidden: ["Open Food Facts", "Wikidata", "ODbL", "CC0"],
   requireIn: ["README.md"],
@@ -65,6 +94,7 @@ const DEFAULTS = {
     "package-lock.json",
     CONFIG_NAME,
     "LICENSE",
+    "LICENSE-LOGIN-AI",
     "COPYRIGHT",
   ],
 };
@@ -75,6 +105,10 @@ function readJson(file) {
 
 function writeText(file, text) {
   writeFileSync(file, text.endsWith("\n") ? text : `${text}\n`, "utf8");
+}
+
+function mentionsProtected(value) {
+  return /vectorfield4|login ai/i.test(JSON.stringify(value ?? ""));
 }
 
 function loadConfig(projectRoot, explicitPath) {
@@ -110,7 +144,12 @@ function updatePackage(projectRoot, config) {
   if (!existsSync(file)) return null;
 
   const manifest = readJson(file);
-  manifest.license = config.packageLicense;
+  if (!mentionsProtected(manifest.license)) {
+    manifest.license = config.packageLicense;
+  }
+  if (!mentionsProtected(manifest.author)) {
+    manifest.author = config.author;
+  }
   writeFileSync(file, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
   return "package.json";
 }
@@ -124,17 +163,18 @@ function updateDataset(projectRoot, config) {
   }
 
   const data = readJson(file);
+  if (Array.isArray(data)) {
+    throw new Error("dataset root must be an object with a source field");
+  }
+
   const source = {
     ...(config.datasetSource ?? {}),
     name: config.owner,
     license: config.licenseName,
+    mainLicense: config.mainLicenseName,
     copyright: config.copyright,
   };
   delete source.wikidata;
-
-  if (Array.isArray(data)) {
-    throw new Error("dataset root must be an object with a source field");
-  }
 
   data.source = source;
   const items = Array.isArray(data.items) ? data.items : [];
@@ -146,10 +186,13 @@ function updateDataset(projectRoot, config) {
   return config.dataset;
 }
 
-function applyLicense(projectRoot, config, licenseText) {
+function applyLicense(projectRoot, config, mainLicenseText, sublicenseText) {
   const applied = [];
-  const licenseFile = join(projectRoot, config.licenseFile);
-  writeText(licenseFile, licenseText);
+
+  writeText(join(projectRoot, config.mainLicenseFile), mainLicenseText);
+  applied.push(config.mainLicenseFile);
+
+  writeText(join(projectRoot, config.licenseFile), sublicenseText);
   applied.push(config.licenseFile);
 
   if (config.copyrightFile) {
@@ -211,6 +254,12 @@ function checkDataset(projectRoot, config, errors) {
   if (!source || source.license !== config.licenseName) {
     errors.push(`dataset source.license must be "${config.licenseName}"`);
   }
+  if (!source || source.mainLicense !== config.mainLicenseName) {
+    errors.push(`dataset source.mainLicense must be "${config.mainLicenseName}"`);
+  }
+  if (config.datasetSource?.author && source?.author !== config.datasetSource.author) {
+    errors.push(`dataset source.author must be "${config.datasetSource.author}"`);
+  }
   if (source?.wikidata) {
     errors.push("dataset source.wikidata must be removed");
   }
@@ -227,13 +276,43 @@ function scan(projectRoot, config) {
   const errors = [];
   const warnings = [];
 
+  const mainLicensePath = join(projectRoot, config.mainLicenseFile);
+  if (!existsSync(mainLicensePath)) {
+    errors.push(`${config.mainLicenseFile} is missing`);
+  } else {
+    const license = readFileSync(mainLicensePath, "utf8");
+    if (!license.includes(config.mainLicenseName)) {
+      errors.push(
+        `${config.mainLicenseFile} does not contain "${config.mainLicenseName}"`,
+      );
+    }
+  }
+
   const licensePath = join(projectRoot, config.licenseFile);
   if (!existsSync(licensePath)) {
     errors.push(`${config.licenseFile} is missing`);
   } else {
     const license = readFileSync(licensePath, "utf8");
+    const lower = license.toLocaleLowerCase("en");
     if (!license.includes(config.licenseName)) {
       errors.push(`${config.licenseFile} does not contain "${config.licenseName}"`);
+    }
+    if (!license.includes(config.mainLicenseName)) {
+      errors.push(`${config.licenseFile} does not reference "${config.mainLicenseName}"`);
+    }
+    for (const term of config.licenseContains) {
+      if (!lower.includes(term.toLocaleLowerCase("en"))) {
+        errors.push(`${config.licenseFile} does not contain "${term}"`);
+      }
+    }
+  }
+
+  if (config.copyrightFile) {
+    const copyrightPath = join(projectRoot, config.copyrightFile);
+    if (!existsSync(copyrightPath)) {
+      errors.push(`${config.copyrightFile} is missing`);
+    } else if (!readFileSync(copyrightPath, "utf8").includes(config.copyright)) {
+      errors.push(`${config.copyrightFile} must contain "${config.copyright}"`);
     }
   }
 
@@ -242,8 +321,26 @@ function scan(projectRoot, config) {
     warnings.push("package.json is missing");
   } else {
     const manifest = readJson(packagePath);
-    if (manifest.license !== config.packageLicense) {
-      errors.push(`package.json license must be "${config.packageLicense}"`);
+    if (
+      !mentionsProtected(manifest.license) &&
+      manifest.license !== config.packageLicense
+    ) {
+      errors.push(
+        `package.json license must be "${config.packageLicense}" or keep Vectorfield4`,
+      );
+    }
+    if (mentionsProtected(manifest.author)) {
+      // Keep an existing Vectorfield4 or Login AI author untouched.
+    } else if (
+      typeof manifest.author !== "object" ||
+      manifest.author === null ||
+      manifest.author.name !== config.author.name ||
+      manifest.author.email !== config.author.email ||
+      manifest.author.url !== config.author.url
+    ) {
+      errors.push(
+        `package.json author must be { name, email, url } for ${config.author.name}`,
+      );
     }
   }
 
@@ -282,13 +379,14 @@ function scan(projectRoot, config) {
 const usage = [
   "Usage:",
   "  node scripts/license.mjs <project> --check",
-  "  node scripts/license.mjs <project> --apply [--config <path>] [--license <path>]",
+  "  node scripts/license.mjs <project> --apply [--config <path>]",
   "",
   "Options:",
-  "  --apply            write LICENSE, COPYRIGHT, package and dataset metadata",
-  "  --check            audit only, the default",
-  "  --config <path>    project config, defaults to .login-ai-license.json",
-  "  --license <path>   canonical license text for this run",
+  "  --apply             write LICENSE, LICENSE-LOGIN-AI, COPYRIGHT, package and dataset metadata",
+  "  --check             audit only, the default",
+  "  --config <path>     project config, defaults to .login-ai-license.json",
+  "  --main-license <path>  Vectorfield4 main license for this run",
+  "  --license <path>    Login AI sublicense text for this run",
 ];
 
 if (isEntryPoint(import.meta.url)) {
@@ -299,6 +397,7 @@ if (isEntryPoint(import.meta.url)) {
       check: "boolean",
       config: "string",
       license: "string",
+      "main-license": "string",
     },
     allowEmpty: true,
     main: async (flags) => {
@@ -308,12 +407,17 @@ if (isEntryPoint(import.meta.url)) {
       }
 
       const config = loadConfig(projectRoot, flags.config);
-      const licenseText = readLicense(
-        flags.license ? resolve(projectRoot, flags.license) : DEFAULT_LICENSE,
+      const mainLicenseText = readLicense(
+        flags["main-license"]
+          ? resolve(projectRoot, flags["main-license"])
+          : DEFAULT_MAIN_LICENSE,
+      );
+      const sublicenseText = readLicense(
+        flags.license ? resolve(projectRoot, flags.license) : DEFAULT_SUBLICENSE,
       );
 
       const applied = flags.apply
-        ? applyLicense(projectRoot, config, licenseText)
+        ? applyLicense(projectRoot, config, mainLicenseText, sublicenseText)
         : [];
 
       const report = scan(projectRoot, config);

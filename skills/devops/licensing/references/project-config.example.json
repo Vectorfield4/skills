@@ -1,16 +1,38 @@
 {
   "licenseName": "Login AI License",
-  "owner": "Login AI",
+  "owner": "Vectorfield4",
   "copyright": "© 2026 Login AI",
-  "licenseFile": "LICENSE",
+  "mainLicenseName": "Vectorfield4 Main License",
+  "mainLicenseFile": "LICENSE",
+  "licenseFile": "LICENSE-LOGIN-AI",
   "copyrightFile": "COPYRIGHT",
-  "packageLicense": "SEE LICENSE IN LICENSE",
+  "packageLicense": "Login AI",
+  "author": {
+    "name": "Filipp Kuksov",
+    "email": "vectorfield4@gmail.com",
+    "url": "https://github.com/Vectorfield4"
+  },
+  "licenseContains": [
+    "Login AI License",
+    "sublicense",
+    "Vectorfield4",
+    "cto@loginai.ru",
+    "vectorfield4@gmail.com",
+    "read",
+    "process",
+    "edit",
+    "transfer",
+    "display",
+    "commercial",
+    "permission"
+  ],
   "dataset": "src/data/additives.json",
   "datasetSource": {
-    "name": "Login AI",
+    "name": "Vectorfield4",
+    "author": "Filipp Kuksov",
     "license": "Login AI License",
     "licenseUrl": "/license/",
-    "copyright": "© 2026 Login AI"
+    "mainLicense": "Vectorfield4 Main License"
   },
   "stripItemFields": ["wikidata"],
   "forbidden": [
@@ -31,6 +53,7 @@
     "package-lock.json",
     ".login-ai-license.json",
     "LICENSE",
+    "LICENSE-LOGIN-AI",
     "COPYRIGHT"
   ]
 }
