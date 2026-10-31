@@ -83,8 +83,8 @@ const main = async () => {
   };
 
   if (!existsSync(regionDir)) throw new Error(`region folder not found: ${regionDir}`);
-  const regionArea = path.join(regionDir, "area.md");
-  if (!existsSync(regionArea) || readFileSync(regionArea, "utf8").trim().length < 50) error("region area.md is missing or too short");
+  const regionArea = path.join(regionDir, "area.yaml");
+  if (!existsSync(regionArea) || readFileSync(regionArea, "utf8").trim().length < 50) error("region area.yaml is missing or too short");
 
   const index = readCollection(path.join(regionDir, "index.geojson"), "index.geojson");
   const boundaries = readCollection(path.join(regionDir, "boundaries.geojson"), "boundaries.geojson");
@@ -153,7 +153,7 @@ const main = async () => {
       if (indexSlugs.has(slug)) error(`${where}: duplicate district_slug`);
       indexSlugs.add(slug);
 
-      for (const key of ["district", "district_slug", "district_type", "admin_subject", "springs_path", "area_md", "geometry_basis"]) {
+      for (const key of ["district", "district_slug", "district_type", "admin_subject", "springs_path", "area_yaml", "geometry_basis"]) {
         if (typeof props[key] !== "string" || props[key].length === 0) error(`${where}: ${key} must be a non-empty string`);
       }
       if (!DISTANCE.includes(props.district_type)) warn(`${where}: unusual district_type "${props.district_type}"`);
@@ -179,9 +179,9 @@ const main = async () => {
         error(`${where}: district folder is missing`);
         continue;
       }
-      if (!existsSync(path.join(regionDir, props.area_md))) error(`${where}: area_md does not exist`);
-      const districtArea = path.join(regionDir, props.area_md);
-      if (existsSync(districtArea) && readFileSync(districtArea, "utf8").trim().length < 50) warn(`${where}: area.md is short`);
+      if (!existsSync(path.join(regionDir, props.area_yaml))) error(`${where}: area_yaml does not exist`);
+      const districtArea = path.join(regionDir, props.area_yaml);
+      if (existsSync(districtArea) && readFileSync(districtArea, "utf8").trim().length < 50) warn(`${where}: area.yaml is short`);
 
       const springsFile = path.join(regionDir, props.springs_path);
       if (!existsSync(springsFile)) {

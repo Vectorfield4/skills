@@ -2,7 +2,7 @@
 // Rebuilds geo/<region>/index.geojson from district folders, boundaries and
 // spring layers. Counts and paths must match the district files exactly.
 
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { bboxPolygon, readJson, round, today, writeJson } from "#lib/geo.mjs";
 import { isEntryPoint, parseFlags, wantsHelp } from "#lib/cli.mjs";
@@ -18,6 +18,19 @@ Flags:
 const readFeatures = (file) => {
   const data = readJson(file);
   return Array.isArray(data.features) ? data.features : [];
+};
+
+// area.yaml is the district card and the source of truth for the readable fields;
+// they are plain scalars on the top level, so no parser is needed here.
+const readCardFields = (file) => {
+  const text = readFileSync(file, "utf8");
+  const field = (key) => {
+    const match = text.match(new RegExp(`^${key}:[ \\t]*(.+)$`, "m"));
+    if (!match) return null;
+    const value = match[1].trim().replace(/^["']|["']$/g, "");
+    return value.length > 0 ? value : null;
+  };
+  return { name: field("name"), type: field("type"), subject: field("subject") };
 };
 
 const extentOf = (features) => {
@@ -80,8 +93,9 @@ const main = async () => {
     const osmFile = path.join(districtDir, "osm-springs.geojson");
     const osm = existsSync(osmFile) ? readFeatures(osmFile) : [];
 
-    const areaFile = path.join(districtDir, "area.md");
-    if (!existsSync(areaFile)) throw new Error(`missing area.md for ${slug}`);
+    const areaFile = path.join(districtDir, "area.yaml");
+    if (!existsSync(areaFile)) throw new Error(`missing area.yaml for ${slug}`);
+    const card = readCardFields(areaFile);
 
     const { bbox, centroid } = extentOf(springs);
     const geometry = boundary?.geometry ?? (bbox ? bboxPolygon(bbox) : null);
@@ -92,13 +106,13 @@ const main = async () => {
       id: slug,
       geometry,
       properties: {
-        district: old.district ?? boundaryProps.district ?? slug,
+        district: card.name ?? old.district ?? boundaryProps.district ?? slug,
         district_slug: slug,
-        district_type: boundaryProps.district_type ?? old.district_type ?? "муниципальный район",
-        admin_subject: boundaryProps.admin_subject ?? old.admin_subject ?? existing?.admin_subject ?? flags.region,
+        district_type: card.type ?? boundaryProps.district_type ?? old.district_type ?? "муниципальный район",
+        admin_subject: card.subject ?? boundaryProps.admin_subject ?? old.admin_subject ?? existing?.admin_subject ?? flags.region,
         springs_count: springs.length,
         springs_path: `${slug}/springs.geojson`,
-        area_md: `${slug}/area.md`,
+        area_yaml: `${slug}/area.yaml`,
         geometry_basis: geometryBasis,
         bbox,
         centroid,
@@ -110,7 +124,7 @@ const main = async () => {
   }
 
   if (missingDirs.length > 0) {
-    throw new Error(`Missing district folders: ${missingDirs.join(", ")}. Create them with area.md and springs.geojson first.`);
+    throw new Error(`Missing district folders: ${missingDirs.join(", ")}. Create them with area.yaml and springs.geojson first.`);
   }
 
   const outFile = flags.out ? path.resolve(flags.out) : indexPath;
